@@ -1,0 +1,9 @@
+autopep8
+tqdm
+datasets==2.0.0
+jax==0.3.4
+jaxlib==0.3.2
+flax==0.4.1
+optax==0.1.1
+# https://github.com/huggingface/transformers/issues/16401
+git+https://github.com/huggingface/transformers.git@aa6cfe9#egg=transformers
