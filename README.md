@@ -203,6 +203,8 @@ def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np
 
 ### 3.1. Parameter format of `FlaxBartForSequenceClassification`
 
+![](assets/parameter-format-1.svg)
+
 ```
 shared
     embedding (50265, 768)
@@ -291,6 +293,8 @@ decoder
 ```
 
 ### 3.2. Parameter format of this project
+
+![](assets/parameter-format-2.svg)
 
 ```
 embedding
