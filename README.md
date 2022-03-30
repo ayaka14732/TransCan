@@ -10,8 +10,8 @@
     * [2.6. Transformer Decoder](#26-transformer-decoder)
     * [2.7. Transformer](#27-transformer)
 * [3. Model Parameters](#3-model-parameters)
-    * [3.1. Original Checkpoint](#31-original-checkpoint)
-    * [3.2. My Implementation](#32-my-implementation)
+    * [3.1. Parameter format of FlaxBartForSequenceClassification](#31-parameter-format-of-flaxbartforsequenceclassification)
+    * [3.2. Parameter format of this project](#32-parameter-format-of-this-project)
 * [4. Training Setup](#4-training-setup)
 * [5. Implementation Notes](#5-implementation-notes)
     * [5.1. The bart-large model itself does not work properly](#51-the-bart-large-model-itself-does-not-work-properly)
@@ -29,7 +29,7 @@
 
 This project is the JAX implementation of the [bart-base](https://arxiv.org/abs/1910.13461) model. It is built with two objectives in mind:
 
-(1) To explain the architecture of BART more clearly;
+(1) To explain the BART architecture more clearly;
 
 (2) To demonstrate how the Transformer-based model can be implemented in JAX.
 
@@ -201,9 +201,179 @@ def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np
 
 ## 3. Model Parameters
 
-### 3.1. Original Checkpoint
+### 3.1. Parameter format of `FlaxBartForSequenceClassification`
 
-### 3.2. My Implementation
+```
+shared
+    embedding (50265, 768)
+encoder
+    embed_positions
+        embedding (1026, 768)
+    layernorm_embedding
+        scale (768,)
+        bias (768,)
+    layers
+        0..5
+            self_attn
+                q_proj
+                    kernel (768, 768)
+                    bias (768,)
+                k_proj
+                    kernel (768, 768)
+                    bias (768,)
+                v_proj
+                    kernel (768, 768)
+                    bias (768,)
+                out_proj
+                    kernel (768, 768)
+                    bias (768,)
+            self_attn_layer_norm
+                scale (768,)
+                bias (768,)
+            fc1
+                kernel (768, 3072)
+                bias (3072,)
+            fc2
+                kernel (3072, 768)
+                bias (768,)
+            final_layer_norm
+                scale (768,)
+                bias (768,)
+decoder
+    embed_positions
+        embedding (1026, 768)
+    layernorm_embedding
+        scale (768,)
+        bias (768,)
+    layers
+        0..5
+            self_attn
+                q_proj
+                    kernel (768, 768)
+                    bias (768,)
+                k_proj
+                    kernel (768, 768)
+                    bias (768,)
+                v_proj
+                    kernel (768, 768)
+                    bias (768,)
+                out_proj
+                    kernel (768, 768)
+                    bias (768,)
+            self_attn_layer_norm
+                scale (768,)
+                bias (768,)
+            encoder_attn
+                q_proj
+                    kernel (768, 768)
+                    bias (768,)
+                k_proj
+                    kernel (768, 768)
+                    bias (768,)
+                v_proj
+                    kernel (768, 768)
+                    bias (768,)
+                out_proj
+                    kernel (768, 768)
+                    bias (768,)
+            encoder_attn_layer_norm
+                scale (768,)
+                bias (768,)
+            fc1
+                kernel (768, 3072)
+                bias (3072,)
+            fc2
+                kernel (3072, 768)
+                bias (768,)
+            final_layer_norm
+                scale (768,)
+                bias (768,)
+```
+
+### 3.2. Parameter format of this project
+
+```
+embedding
+    embedding (50265, 768)
+encoder_embed_positions (1026, 768)
+decoder_embed_positions (1026, 768)
+encoder_embed_layer_norm
+    scale (768,)
+    bias (768,)
+decoder_embed_layer_norm
+    scale (768,)
+    bias (768,)
+encoder_layers
+    0..5
+        self_attn
+            q_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            k_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            v_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            ff
+                kernel (768, 768)
+                bias (768,)
+        self_attn_layer_norm
+            scale (768,)
+            bias (768,)
+        ff0
+            kernel (768, 3072)
+            bias (3072,)
+        ff1
+            kernel (3072, 768)
+            bias (768,)
+        final_layer_norm
+            scale (768,)
+            bias (768,)
+decoder_layers
+    0..5
+        self_attn
+            q_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            k_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            v_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            ff
+                kernel (768, 768)
+                bias (768,)
+        self_attn_layer_norm
+            scale (768,)
+            bias (768,)
+        cross_attn
+            q_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            k_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            v_proj
+                kernel (12, 768, 64)
+                bias (12, 64)
+            ff
+                kernel (768, 768)
+                bias (768,)
+        cross_attn_layer_norm
+            scale (768,)
+            bias (768,)
+        ff0
+            kernel (768, 3072)
+            bias (3072,)
+        ff1
+            kernel (3072, 768)
+            bias (768,)
+        final_layer_norm
+            scale (768,)
+            bias (768,)
+```
 
 ## 4. Training Setup
 
