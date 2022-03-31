@@ -1,3 +1,4 @@
+from .dropout import dropout
 from .fwd_layer_norm import fwd_layer_norm
 from .fwd_embedding import fwd_embedding
 from .fwd_linear import fwd_linear
