@@ -17,7 +17,8 @@ def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np
     encoder_layers: list = params['encoder_layers']  # list of transformer encoder
     decoder_layers: list = params['decoder_layers']  # list of transformer encoder
 
-    subkeys = rand.split(dropout_key, num=2)
+    if dropout_key is not None:
+        subkeys = rand.split(dropout_key, num=2)
 
     _, width_enc = src.shape
     _, width_dec = dst.shape

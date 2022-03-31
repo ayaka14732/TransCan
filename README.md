@@ -137,7 +137,8 @@ def fwd_transformer_encoder(params: dict, src: np.ndarray, mask_enc: np.ndarray,
     ff1: dict = params['ff1']  # linear
     final_layer_norm: dict = params['final_layer_norm']  # layer norm
 
-    subkeys = rand.split(dropout_key, num=3)
+    if dropout_key is not None:
+        subkeys = rand.split(dropout_key, num=3)
 
     src_ = src
     t = fwd_attention(self_attn, src, src, mask_enc)
@@ -172,7 +173,8 @@ def fwd_transformer_decoder(params: dict, src: np.ndarray, dst: np.ndarray, mask
     ff1: dict = params['ff1']  # linear
     final_layer_norm: dict = params['final_layer_norm']  # layer norm
 
-    subkeys = rand.split(dropout_key, num=4)
+    if dropout_key is not None:
+        subkeys = rand.split(dropout_key, num=4)
 
     dst_ = dst
     dst = fwd_attention(self_attn, dst, dst, mask_dec)
@@ -214,7 +216,8 @@ def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np
     encoder_layers: list = params['encoder_layers']  # list of transformer encoder
     decoder_layers: list = params['decoder_layers']  # list of transformer encoder
 
-    subkeys = rand.split(dropout_key, num=2)
+    if dropout_key is not None:
+        subkeys = rand.split(dropout_key, num=2)
 
     _, width_enc = src.shape
     _, width_dec = dst.shape

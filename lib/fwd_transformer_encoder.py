@@ -15,7 +15,8 @@ def fwd_transformer_encoder(params: dict, src: np.ndarray, mask_enc: np.ndarray,
     ff1: dict = params['ff1']  # linear
     final_layer_norm: dict = params['final_layer_norm']  # layer norm
 
-    subkeys = rand.split(dropout_key, num=3)
+    if dropout_key is not None:
+        subkeys = rand.split(dropout_key, num=3)
 
     src_ = src
     t = fwd_attention(self_attn, src, src, mask_enc)
