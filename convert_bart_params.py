@@ -72,8 +72,8 @@ serialized_params = serialize(params)
 recovered_params = deserialize(serialized_params)
 
 def assert_tree_equal(a, b) -> bool:
-    if isinstance(a, np.ndarray) or isinstance(a, onp.ndarray):
-        assert isinstance(b, np.ndarray) or isinstance(b, onp.ndarray), f'{type(b)}'
+    if isinstance(a, (np.ndarray, onp.ndarray)):
+        assert isinstance(b, (np.ndarray, onp.ndarray)), f'{type(b)}'
         assert np.allclose(a, b)
 
     elif isinstance(a, dict):
