@@ -217,7 +217,8 @@ def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np
     decoder_layers: list = params['decoder_layers']  # list of transformer encoder
 
     if dropout_key is not None:
-        subkeys = rand.split(dropout_key, num=2)
+        num_keys = 2 + len(encoder_layers) + len(decoder_layers)
+        keys = iter(rand.split(dropout_key, num=num_keys))
 
     _, width_enc = src.shape
     _, width_dec = dst.shape
@@ -229,17 +230,23 @@ def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np
     src = src + encoder_embed_positions[offset:width_enc+offset]
     src = fwd_layer_norm(encoder_embed_layer_norm, src)
     if dropout_key is not None:
-        src = dropout(subkeys[0], src)
+        src = dropout(next(keys), src)
     for encoder_layer in encoder_layers:
-        src = fwd_transformer_encoder(encoder_layer, src, mask_enc)
+        if dropout_key is not None:
+            src = fwd_transformer_encoder(encoder_layer, src, mask_enc, dropout_key=next(keys))
+        else:
+            src = fwd_transformer_encoder(encoder_layer, src, mask_enc)
 
     dst = fwd_embedding(embedding, dst)
     dst = dst + decoder_embed_positions[offset:width_dec+offset]
     dst = fwd_layer_norm(decoder_embed_layer_norm, dst)
     if dropout_key is not None:
-        dst = dropout(subkeys[1], dst)
+        dst = dropout(next(keys), dst)
     for decoder_layer in decoder_layers:
-        dst = fwd_transformer_decoder(decoder_layer, src, dst, mask_dec, mask_dec_enc)
+        if dropout_key is not None:
+            dst = fwd_transformer_decoder(decoder_layer, src, dst, mask_dec, mask_dec_enc, dropout_key=next(keys))
+        else:
+            dst = fwd_transformer_decoder(decoder_layer, src, dst, mask_dec, mask_dec_enc)
 
     return dst
 ```
