@@ -27,22 +27,28 @@ def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np
     # https://github.com/huggingface/transformers/blob/v4.17.0/src/transformers/models/bart/modeling_flax_bart.py#L718-L719
     offset = 2
 
+    # encoder
     src = fwd_embedding(embedding, src)
     src = src + encoder_embed_positions[offset:width_enc+offset]
     src = fwd_layer_norm(encoder_embed_layer_norm, src)
+
     if dropout_key is not None:
         src = dropout(next(keys), src)
+
     for encoder_layer in encoder_layers:
         if dropout_key is not None:
             src = fwd_transformer_encoder(encoder_layer, src, mask_enc, dropout_key=next(keys))
         else:
             src = fwd_transformer_encoder(encoder_layer, src, mask_enc)
 
+    # decoder
     dst = fwd_embedding(embedding, dst)
     dst = dst + decoder_embed_positions[offset:width_dec+offset]
     dst = fwd_layer_norm(decoder_embed_layer_norm, dst)
+
     if dropout_key is not None:
         dst = dropout(next(keys), dst)
+
     for decoder_layer in decoder_layers:
         if dropout_key is not None:
             dst = fwd_transformer_decoder(decoder_layer, src, dst, mask_dec, mask_dec_enc, dropout_key=next(keys))
