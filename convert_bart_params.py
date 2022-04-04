@@ -5,11 +5,13 @@ from lib.param_utils.assert_tree_equal import assert_tree_equal
 from lib.param_utils.save_params import save_params
 from lib.param_utils.flax2jax import flax2jax
 from lib.param_utils.pt2jax import pt2jax
+from lib.param_utils.jax2flax import jax2flax
 
 # facebook/bart-base
 
 model_bart_base_en = FlaxBartForConditionalGeneration.from_pretrained('facebook/bart-base')
-params_bart_base_en = flax2jax(model_bart_base_en.params['model'])
+params_bart_base_en_flax = model_bart_base_en.params['model']
+params_bart_base_en = flax2jax(params_bart_base_en_flax)
 save_params(params_bart_base_en, 'params_bart_base_en.dat')
 
 # fnlp/bart-base-chinese
@@ -47,3 +49,8 @@ assert_tree_equal(
 )
 
 save_params(params_bart_base_zh_rand, 'params_bart_base_zh_rand.dat')
+
+# roundtrip test for flax2jax and jax2flax
+
+params_bart_base_en_flax_roundtrip = jax2flax(params_bart_base_en)
+assert_tree_equal(params_bart_base_en_flax, params_bart_base_en_flax_roundtrip)
