@@ -7,10 +7,6 @@ from transformers.modeling_outputs import BaseModelOutput
 
 from .param_utils.jax2flax import jax2flax
 
-from .fwd_embedding import fwd_embedding
-from .fwd_layer_norm import fwd_layer_norm
-from .fwd_transformer_encoder import fwd_transformer_encoder
-
 '''
 Notes: Tricky things
 
@@ -23,27 +19,6 @@ parameter, but `FlaxBartForConditionalGeneration` does not support it.
 So in the transformer library, both the PyTorch implementation and the Flax implementation
 have some issues.
 '''
-
-def fwd_encode(params: dict, src: np.ndarray, mask_enc: np.ndarray) -> np.ndarray:
-    # params
-    embedding: dict = params['embedding']  # embedding
-    encoder_embed_positions: np.ndarray = params['encoder_embed_positions']  # array
-    encoder_embed_layer_norm: dict = params['encoder_embed_layer_norm']  # layer norm
-    encoder_layers: list = params['encoder_layers']  # list of transformer encoder
-
-    _, width_enc = src.shape
-
-    offset = 2
-
-    # encoder
-    src = fwd_embedding(embedding, src)
-    src = src + encoder_embed_positions[offset:width_enc+offset]
-    src = fwd_layer_norm(encoder_embed_layer_norm, src)
-
-    for encoder_layer in encoder_layers:
-        src = fwd_transformer_encoder(encoder_layer, src, mask_enc)
-
-    return src
 
 class Generator:
     def __init__(self, params: np.ndarray, config: BartConfig=BartConfig.from_pretrained('facebook/bart-base')):
@@ -62,8 +37,7 @@ class Generator:
         self.params = params
         self.model = model_pt
 
-    def generate(self, src: np.ndarray, mask_enc: np.ndarray, **kwargs):
-        encoder_last_hidden_output = fwd_encode(self.params, src, mask_enc)
+    def generate(self, encoder_last_hidden_output: np.ndarray, **kwargs):
         encoder_outputs = BaseModelOutput(last_hidden_state=torch.from_numpy(onp.asarray(encoder_last_hidden_output)))
         generate_ids = self.model.generate(encoder_outputs=encoder_outputs, **kwargs)
         return np.asarray(generate_ids.numpy())
