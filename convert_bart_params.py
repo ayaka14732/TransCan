@@ -50,7 +50,14 @@ assert_tree_equal(
 
 save_params(params_bart_base_zh_rand, 'params_bart_base_zh_rand.dat')
 
-# roundtrip test for flax2jax and jax2flax
+# roundtrip test for flax2jax => jax2flax
 
 params_bart_base_en_flax_roundtrip = jax2flax(params_bart_base_en)
 assert_tree_equal(params_bart_base_en_flax, params_bart_base_en_flax_roundtrip)
+
+# roundtrip test for flax2pt (done by the transformers library) => pt2jax and flax2jax
+
+model_bart_base_zh_rand.save_pretrained('/tmp/pretrained')
+model_bart_base_zh_rand_pt = BartForConditionalGeneration.from_pretrained('/tmp/pretrained', from_flax=True)
+params_bart_base_zh_rand_ = pt2jax(dict(model_bart_base_zh_rand_pt.model.named_parameters()))
+assert_tree_equal(params_bart_base_zh_rand, params_bart_base_zh_rand_)
