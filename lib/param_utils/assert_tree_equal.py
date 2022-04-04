@@ -2,7 +2,11 @@ import jax.numpy as np
 import numpy as onp
 
 def assert_tree_equal(a, b) -> bool:
-    if isinstance(a, (np.ndarray, onp.ndarray)):
+    if isinstance(a, int):
+        assert isinstance(b, int), f'{type(b)}'
+        assert a == b, f'{a} != {b}'
+
+    elif isinstance(a, (np.ndarray, onp.ndarray)):
         assert isinstance(b, (np.ndarray, onp.ndarray)), f'{type(b)}'
         assert np.allclose(a, b)
 
@@ -16,6 +20,12 @@ def assert_tree_equal(a, b) -> bool:
 
     elif isinstance(a, list):
         assert isinstance(b, list), f'{type(b)}'
+        assert len(a) == len(b)
+        for a_, b_ in zip(a, b):
+            assert_tree_equal(a_, b_)
+
+    elif isinstance(a, tuple):
+        assert isinstance(b, tuple), f'{type(b)}'
         assert len(a) == len(b)
         for a_, b_ in zip(a, b):
             assert_tree_equal(a_, b_)

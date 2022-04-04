@@ -1,6 +1,7 @@
 autopep8
 tqdm
 datasets==2.0.0
+torch==1.11.0
 jax==0.3.4
 jaxlib==0.3.2
 flax==0.4.1
