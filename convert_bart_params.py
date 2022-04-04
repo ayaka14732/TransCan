@@ -1,5 +1,5 @@
 import jax
-from transformers import BartForConditionalGeneration, FlaxBartForSequenceClassification
+from transformers import BartForConditionalGeneration, FlaxBartForConditionalGeneration
 
 from lib.param_utils.assert_tree_equal import assert_tree_equal
 from lib.param_utils.save_params import save_params
@@ -8,9 +8,9 @@ from lib.param_utils.pt2jax import pt2jax
 
 # facebook/bart-base
 
-model_bart_base_en = FlaxBartForSequenceClassification.from_pretrained('facebook/bart-base')
+model_bart_base_en = FlaxBartForConditionalGeneration.from_pretrained('facebook/bart-base')
 params_bart_base_en = flax2jax(model_bart_base_en.params['model'])
-# save_params(params_bart_base_en, 'params_bart_base_en.dat')
+save_params(params_bart_base_en, 'params_bart_base_en.dat')
 
 # fnlp/bart-base-chinese
 
@@ -36,3 +36,14 @@ check_shape_equal_except_for_embeddings()
 
 save_params(params_bart_base_zh, 'params_bart_base_zh.dat')
 
+# randomly initialized fnlp/bart-base-chinese
+
+model_bart_base_zh_rand = FlaxBartForConditionalGeneration(config=model_bart_base_zh.config, seed=42)
+params_bart_base_zh_rand = flax2jax(model_bart_base_zh_rand.params['model'])
+
+assert_tree_equal(
+    jax.tree_map(lambda x: x.shape, params_bart_base_zh),
+    jax.tree_map(lambda x: x.shape, params_bart_base_zh_rand),
+)
+
+save_params(params_bart_base_zh_rand, 'params_bart_base_zh_rand.dat')
