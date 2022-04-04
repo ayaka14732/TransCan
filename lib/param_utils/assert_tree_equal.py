@@ -8,7 +8,7 @@ def assert_tree_equal(a, b, path=['root']) -> bool:
 
     elif isinstance(a, (np.ndarray, onp.ndarray)):
         assert isinstance(b, (np.ndarray, onp.ndarray)), f'{type(b)}'
-        assert np.allclose(a, b), f'{path}: {a} != {b}'
+        assert np.allclose(a, b)
 
     elif isinstance(a, dict):
         assert isinstance(b, dict), f'{path}: {type(a)} != {type(b)}'
@@ -22,7 +22,7 @@ def assert_tree_equal(a, b, path=['root']) -> bool:
         assert isinstance(b, list), f'{path}: {type(a)} != {type(b)}'
         assert len(a) == len(b)
         for i, (a_, b_) in enumerate(zip(a, b)):
-            assert_tree_equal(a_, b_, path=[*path, key])
+            assert_tree_equal(a_, b_, path=[*path, str(i)])
 
     elif isinstance(a, tuple):
         assert isinstance(b, tuple), f'{path}: {type(a)} != {type(b)}'
