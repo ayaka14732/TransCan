@@ -41,9 +41,10 @@ mask_enc = np.einsum('bi,bj->bij', mask_enc_1d, mask_enc_1d)[:, None]
 params = load_params('params_bart_base_en.dat')
 params = jax.tree_map(np.asarray, params)
 
-generator = Generator(params)
 encoder_last_hidden_output = fwd_encode(params, src, mask_enc)
-generate_ids = generator.generate(encoder_last_hidden_output)
+
+generator = Generator(params)
+generate_ids = generator.generate(encoder_last_hidden_output, num_beams=5)
 
 decoded_sentences = tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)
 print(decoded_sentences)

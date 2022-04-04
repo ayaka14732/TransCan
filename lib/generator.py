@@ -5,6 +5,7 @@ import torch
 from transformers import BartConfig, BartForConditionalGeneration, FlaxBartForConditionalGeneration
 from transformers.modeling_outputs import BaseModelOutput
 
+from .param_utils.flax2jax import flax2jax
 from .param_utils.jax2flax import jax2flax
 
 '''
@@ -22,19 +23,36 @@ have some issues.
 
 class Generator:
     def __init__(self, params: np.ndarray, config: BartConfig=BartConfig.from_pretrained('facebook/bart-base')):
-        # create a randomly initialized Flax model
+        # params
+        embedding: dict = params['embedding']  # embedding
+        decoder_embed_positions: np.ndarray = params['decoder_embed_positions']  # array
+        decoder_embed_layer_norm: dict = params['decoder_embed_layer_norm']  # layer norm
+        decoder_layers: list = params['decoder_layers']  # list of transformer encoder
+
+        # randomly initialize a Flax model
         model_flax = FlaxBartForConditionalGeneration(config=config)
 
-        # set the model parameter to the given parameter
+        # extract model parameters and convert to JAX
+        params_jax = flax2jax(model_flax.params['model'])
+
+        # set the decoder part of the model parameters to the given parameters
+        params_jax = {
+            **params_jax,
+            'embedding': embedding,
+            'decoder_embed_positions': decoder_embed_positions,
+            'decoder_embed_layer_norm': decoder_embed_layer_norm,
+            'decoder_layers': decoder_layers,
+        }
+
+        # convert back to Flax
         params_flax = jax2flax(params)
         model_flax.params['model'] = params_flax
 
-        # save the Flax model and load it as a PyTorch model
+        # save the Flax model and reload it as a PyTorch model
         with tempfile.TemporaryDirectory() as tmpdirname:
             model_flax.save_pretrained(tmpdirname)
             model_pt = BartForConditionalGeneration.from_pretrained(tmpdirname, from_flax=True)
 
-        self.params = params
         self.model = model_pt
 
     def generate(self, encoder_last_hidden_output: np.ndarray, **kwargs):
