@@ -45,7 +45,7 @@ class Generator:
         }
 
         # convert back to Flax
-        params_flax = jax2flax(params)
+        params_flax = jax2flax(params_jax)
         model_flax.params['model'] = params_flax
 
         # save the Flax model and reload it as a PyTorch model
