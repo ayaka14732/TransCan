@@ -55,7 +55,8 @@ class Generator:
 
         self.model = model_pt
 
-    def generate(self, encoder_last_hidden_output: np.ndarray, **kwargs):
+    def generate(self, encoder_last_hidden_output: np.ndarray, mask_enc_1d: np.ndarray, **kwargs):
         encoder_outputs = BaseModelOutput(last_hidden_state=torch.from_numpy(onp.asarray(encoder_last_hidden_output)))
-        generate_ids = self.model.generate(encoder_outputs=encoder_outputs, **kwargs)
+        attention_mask = torch.from_numpy(onp.asarray(mask_enc_1d))
+        generate_ids = self.model.generate(attention_mask=attention_mask, encoder_outputs=encoder_outputs, **kwargs)
         return np.asarray(generate_ids.numpy())
