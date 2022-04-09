@@ -1,269 +1,109 @@
 # JAX Implementation of bart-base
 
 * [1. Motivation](#1-motivation)
-* [2. Architecture](#2-architecture)
-    * [2.1. Dropout function](#21-dropout-function)
-    * [2.2. Layer Norm](#22-layer-norm)
-    * [2.3. Embedding](#23-embedding)
-    * [2.4. Linear](#24-linear)
-    * [2.5. Attention](#25-attention)
-    * [2.6. Transformer Encoder](#26-transformer-encoder)
-    * [2.7. Transformer Decoder](#27-transformer-decoder)
-    * [2.8. Transformer](#28-transformer)
-* [3. Parameters](#3-parameters)
-    * [3.1. Overview](#31-overview)
-    * [3.2. Original checkpoint](#32-original-checkpoint)
-    * [3.3. Flax BART model in Hugging Face](#33-flax-bart-model-in-hugging-face)
-    * [3.4. This project](#34-this-project)
-* [4. Training](#4-training)
-* [5. Evaluation](#5-evaluation)
-* [6. Implementation Notes](#6-implementation-notes)
-    * [6.1. The bart-large model itself does not work properly](#61-the-bart-large-model-itself-does-not-work-properly)
-    * [6.2. np.std and torch.std are different](#62-npstd-and-torchstd-are-different)
-    * [6.3. Computations on TPU are in low precision by default](#63-computations-on-tpu-are-in-low-precision-by-default)
-    * [6.4. BART has extra bias parameters for Layer Norm](#64-bart-has-extra-bias-parameters-for-layer-norm)
-    * [6.5. BART has extra bias parameters for <em>Q</em>, <em>K</em> and <em>V</em>](#65-bart-has-extra-bias-parameters-for-q-k-and-v)
-    * [6.6. Positional encoding is learned rather than fixed](#66-positional-encoding-is-learned-rather-than-fixed)
-    * [6.7. Positional encoding has an offset of 2](#67-positional-encoding-has-an-offset-of-2)
-    * [6.8. BART uses tied word embeddings](#68-bart-uses-tied-word-embeddings)
-    * [6.9. BART has extra dropout after activation](#69-bart-has-extra-dropout-after-activation)
-    * [6.10. Hugging Face Transformers 4.17.0 is not compactible with JAX 0.3.4](#610-hugging-face-transformers-4170-is-not-compactible-with-jax-034)
-
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+* [2. Environment Setup](#2-environment-setup)
+* [3. Architecture](#3-architecture)
+* [4. Parameters](#4-parameters)
+    * [4.1. Overview](#41-overview)
+    * [4.2. Original checkpoint](#42-original-checkpoint)
+    * [4.3. Flax BART model in Hugging Face Transformers](#43-flax-bart-model-in-hugging-face-transformers)
+    * [4.4. JAX parameters in this project](#44-jax-parameters-in-this-project)
+* [5. Training](#5-training)
+* [6. Evaluation](#6-evaluation)
+* [7. Generation](#7-generation)
+* [8. Inconsistency Analysis](#8-inconsistency-analysis)
+    * [8.1. BART has learnable parameters for Layer Norm](#81-bart-has-learnable-parameters-for-layer-norm)
+    * [8.2. BART has extra bias parameters for <em>Q</em>, <em>K</em> and <em>V</em>](#82-bart-has-extra-bias-parameters-for-q-k-and-v)
+    * [8.3. Positional encoding is learned rather than fixed](#83-positional-encoding-is-learned-rather-than-fixed)
+    * [8.4. Positional encoding has an offset of 2](#84-positional-encoding-has-an-offset-of-2)
+    * [8.5. BART uses tied word embeddings](#85-bart-uses-tied-word-embeddings)
+    * [8.6. BART has extra dropout after activation](#86-bart-has-extra-dropout-after-activation)
+* [9. Notes on Implementation](#9-notes-on-implementation)
+    * [9.1. bart-large has intrinsic problems](#91-bart-large-has-intrinsic-problems)
+    * [9.2. np.std and torch.std are different](#92-npstd-and-torchstd-are-different)
+    * [9.3. Computations on TPU are in low precision by default](#93-computations-on-tpu-are-in-low-precision-by-default)
+    * [9.4. Weight matrix of linear layer is transposed in PyTorch](#94-weight-matrix-of-linear-layer-is-transposed-in-pytorch)
 
 ## 1. Motivation
 
-This project is the JAX implementation of the [bart-base](https://arxiv.org/abs/1910.13461) model. It is built with two objectives in mind:
+This project is a JAX implementation of the [bart-base](https://arxiv.org/abs/1910.13461) model. It is developed with two objectives in mind:
 
-(1) To explain the BART architecture more clearly;
+(1) To examine the consistency between description and implementation of the BART model;
 
-(2) To demonstrate how the Transformer-based model can be implemented in JAX.
+(2) To demonstrate how Transformer-based models can be implemented in JAX.
 
-In addition to the regular implementation, I also implemented the model [in a single line of Python code](https://twitter.com/ayaka14732/status/1507955631109869574), by virtue of JAX's functional-style API.
+In addition to the regular implementation, we also implemented the model [in a single line of Python code](https://twitter.com/ayaka14732/status/1507955631109869574), by virtue of JAX's functional-style API.
 
 This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoongko/transformer). Nevertheless, the code is written entirely on my own.
 
-## 2. Architecture
+## 2. Environment Setup
 
-### 2.1. Dropout function
+1\. Create a Cloud TPU VM v3-8 with TPU software version v2-nightly20210914
 
-```python
-def dropout(key: rand.KeyArray, x: np.ndarray):
-    keep_rate = 0.9
+2\. Install Python 3.10
 
-    y = x * rand.bernoulli(key, p=keep_rate, shape=x.shape) / keep_rate
-    return y
+3\. Create virtualenv
+
+4\. Install JAX with TPU support
+
+```sh
+pip install -U pip
+pip install -U wheel
+pip install "jax[tpu]==0.3.5" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
-### 2.2. Layer Norm
+5\. Install TPU version of Tensorflow
 
-![](https://raw.githubusercontent.com/hyunwoongko/transformer/master/image/layer_norm.jpg)
-
-```python
-def fwd_layer_norm(params: dict, x: np.ndarray) -> np.ndarray:
-    # params
-    scale: np.ndarray = params['scale']  # array
-    bias: np.ndarray = params['bias']  # array
-
-    eps = 1e-5
-
-    mean = x.mean(-1, keepdims=True)
-    var = x.var(-1, keepdims=True)
-    return ((x - mean) / np.sqrt(var + eps)) * scale + bias
+```sh
+wget https://gist.github.com/ayaka14732/a22234f394d60a28545f76cff23397c0/raw/e6c6ffea91b45a146189b52fea7155b1305bf78e/tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.0
+wget https://gist.github.com/ayaka14732/a22234f394d60a28545f76cff23397c0/raw/e6c6ffea91b45a146189b52fea7155b1305bf78e/tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.1
+cat tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.0 tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.1 > tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl
+pip install tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl
+rm -f tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl*
 ```
 
-### 2.3. Embedding
+6\. Install other required Python packages
 
-```python
-def fwd_embedding(params: dict, x: np.ndarray) -> np.ndarray:
-    # params
-    embedding: np.ndarray = params['embedding']  # array
-
-    y = embedding[x]
-    return y
+```sh
+pip install -r requirements.txt
 ```
 
-### 2.4. Linear
+## 3. Architecture
+
+- [Dropout function](lib/dropout.py)
+- [Layer Norm](lib/fwd_layer_norm.py)
+- [Embedding](lib/fwd_embedding.py)
+- [Linear](lib/fwd_linear.py)
+- [Attention](lib/fwd_attention.py)
+- [Transformer Encoder](lib/fwd_transformer_encoder.py)
+- [Transformer Decoder](lib/fwd_transformer_decoder.py)
+- [Transformer](lib/fwd_transformer.py)
+
+## 4. Parameters
+
+### 4.1. Overview
+
+Parameter-related operations are implemented in the `lib/param_utils` directory. Notably, three functions, `flax2jax`, `pt2jax` and `jax2flax` are implemented, to allow any conversions between PyTorch, Flax and JAX implementation.
+
+| from\to | PyTorch | Flax | JAX |
+| :- | :-: | :-: | :-: |
+| PyTorch | - | `save_pretrained` | `pt2jax` |
+| Flax | `save_pretrained` | - | `flax2jax` |
+| JAX | `jax2flax` + `save_pretrained` | `jax2flax` | - |
+
+`save_pretrained` is a function provided by the Hugging Face Transformers library, so that users can save the model in one framework and reload it in another framework. For instance, the following code saves a Flax model and reload it as a PyTorch model:
 
 ```python
-def fwd_linear(params: dict, x: np.ndarray) -> np.ndarray:
-    # params
-    kernel: np.ndarray = params['kernel']  # array
-    bias: np.ndarray = params['bias']  # array
-
-    return np.dot(x, kernel) + bias
+with tempfile.TemporaryDirectory() as tmpdirname:
+    model_flax.save_pretrained(tmpdirname)
+    model_pt = BartForConditionalGeneration.from_pretrained(tmpdirname, from_flax=True)
 ```
 
-### 2.5. Attention
+### 4.2. Original checkpoint
 
-![](https://raw.githubusercontent.com/hyunwoongko/transformer/master/image/multi_head_attention.jpg)
+The original model implementation and checkpoints are available in the [pytorch/fairseq](https://github.com/pytorch/fairseq/blob/main/examples/bart/README.md) library. The model parameters in Hugging Face Transformers are the same with the original checkpoint, so we only focus on the model parameters in Hugging Face Transformers (see below).
 
-```python
-def fwd_attention(params: dict, src: np.ndarray, dst: np.ndarray, mask: np.ndarray) -> np.ndarray:
-    # params
-    q_proj: dict = params['q_proj']  # linear
-    k_proj: dict = params['k_proj']  # linear
-    v_proj: dict = params['v_proj']  # linear
-    ff: dict = params['ff']  # linear
-
-    _, _, d_k = q_proj['kernel'].shape
-
-    q = fwd_linear(q_proj, dst)
-    k = fwd_linear(k_proj, src)
-    v = fwd_linear(v_proj, src)
-
-    qk = np.einsum('bkhm,bvhm->bhkv', q, k)
-    qk = qk / np.sqrt(d_k)
-    qk = np.where(mask, qk, np.NINF)
-    qk = nn.softmax(qk)
-    qk = np.where(mask, qk, 0)
-
-    t = np.einsum('bhkv,bvhm->bkhm', qk, v)
-    d0, d1, d2, d3 = t.shape
-    t = t.reshape(d0, d1, d2 * d3)
-
-    t = fwd_linear(ff, t)
-    return t
-```
-
-### 2.6. Transformer Encoder
-
-```python
-def fwd_transformer_encoder(params: dict, src: np.ndarray, mask_enc: np.ndarray, dropout_key: rand.KeyArray=None) -> np.ndarray:
-    # params
-    self_attn: dict = params['self_attn']  # attention
-    self_attn_layer_norm: dict = params['self_attn_layer_norm']  # layer norm
-    ff0: dict = params['ff0']  # linear
-    ff1: dict = params['ff1']  # linear
-    final_layer_norm: dict = params['final_layer_norm']  # layer norm
-
-    if dropout_key is not None:
-        subkeys = rand.split(dropout_key, num=3)
-
-    src_ = src
-    t = fwd_attention(self_attn, src, src, mask_enc)
-    if dropout_key is not None:
-        t = dropout(subkeys[0], t)
-    t = t + src_
-    t = fwd_layer_norm(self_attn_layer_norm, t)
-
-    t_ = t
-    t = fwd_linear(ff0, t)
-    t = nn.gelu(t)
-    if dropout_key is not None:
-        t = dropout(subkeys[1], t)
-    t = fwd_linear(ff1, t)
-    if dropout_key is not None:
-        t = dropout(subkeys[2], t)
-    t = t + t_
-    t = fwd_layer_norm(final_layer_norm, t)
-    return t
-```
-
-### 2.7. Transformer Decoder
-
-```python
-def fwd_transformer_decoder(params: dict, src: np.ndarray, dst: np.ndarray, mask_dec: np.ndarray, mask_dec_enc: np.ndarray, dropout_key: rand.KeyArray=None) -> np.ndarray:
-    # params
-    self_attn: dict = params['self_attn']  # attention
-    self_attn_layer_norm: dict = params['self_attn_layer_norm']  # layer norm
-    cross_attn: dict = params['cross_attn']  # attention
-    cross_attn_layer_norm: dict = params['cross_attn_layer_norm']  # layer norm
-    ff0: dict = params['ff0']  # linear
-    ff1: dict = params['ff1']  # linear
-    final_layer_norm: dict = params['final_layer_norm']  # layer norm
-
-    if dropout_key is not None:
-        subkeys = rand.split(dropout_key, num=4)
-
-    dst_ = dst
-    dst = fwd_attention(self_attn, dst, dst, mask_dec)
-    if dropout_key is not None:
-        dst = dropout(subkeys[0], dst)
-    dst = dst + dst_
-    dst = fwd_layer_norm(self_attn_layer_norm, dst)
-
-    dst_ = dst
-    src = fwd_attention(cross_attn, src, dst, mask_dec_enc)
-    if dropout_key is not None:
-        src = dropout(subkeys[1], src)
-    t = src + dst_
-    t = fwd_layer_norm(cross_attn_layer_norm, t)
-
-    t_ = t
-    t = fwd_linear(ff0, t)
-    t = nn.gelu(t)
-    if dropout_key is not None:
-        t = dropout(subkeys[2], t)
-    t = fwd_linear(ff1, t)
-    if dropout_key is not None:
-        t = dropout(subkeys[3], t)
-    t = t + t_
-    t = fwd_layer_norm(final_layer_norm, t)
-    return t
-```
-
-### 2.8. Transformer
-
-```python
-def fwd_transformer(params: dict, src: np.ndarray, dst: np.ndarray, mask_enc: np.ndarray, mask_dec: np.ndarray, mask_dec_enc: np.ndarray, dropout_key: rand.KeyArray=None) -> np.ndarray:
-    # params
-    embedding: dict = params['embedding']  # embedding
-    encoder_embed_positions: np.ndarray = params['encoder_embed_positions']  # array
-    decoder_embed_positions: np.ndarray = params['decoder_embed_positions']  # array
-    encoder_embed_layer_norm: dict = params['encoder_embed_layer_norm']  # layer norm
-    decoder_embed_layer_norm: dict = params['decoder_embed_layer_norm']  # layer norm
-    encoder_layers: list = params['encoder_layers']  # list of transformer encoder
-    decoder_layers: list = params['decoder_layers']  # list of transformer encoder
-
-    if dropout_key is not None:
-        num_keys = 2 + len(encoder_layers) + len(decoder_layers)
-        keys = iter(rand.split(dropout_key, num=num_keys))
-
-    _, width_enc = src.shape
-    _, width_dec = dst.shape
-
-    # https://github.com/huggingface/transformers/blob/v4.17.0/src/transformers/models/bart/modeling_flax_bart.py#L718-L719
-    offset = 2
-
-    # encoder
-    src = fwd_embedding(embedding, src)
-    src = src + encoder_embed_positions[offset:width_enc+offset]
-    src = fwd_layer_norm(encoder_embed_layer_norm, src)
-
-    if dropout_key is not None:
-        src = dropout(next(keys), src)
-
-    for encoder_layer in encoder_layers:
-        if dropout_key is not None:
-            src = fwd_transformer_encoder(encoder_layer, src, mask_enc, dropout_key=next(keys))
-        else:
-            src = fwd_transformer_encoder(encoder_layer, src, mask_enc)
-
-    # decoder
-    dst = fwd_embedding(embedding, dst)
-    dst = dst + decoder_embed_positions[offset:width_dec+offset]
-    dst = fwd_layer_norm(decoder_embed_layer_norm, dst)
-
-    if dropout_key is not None:
-        dst = dropout(next(keys), dst)
-
-    for decoder_layer in decoder_layers:
-        if dropout_key is not None:
-            dst = fwd_transformer_decoder(decoder_layer, src, dst, mask_dec, mask_dec_enc, dropout_key=next(keys))
-        else:
-            dst = fwd_transformer_decoder(decoder_layer, src, dst, mask_dec, mask_dec_enc)
-
-    return dst
-```
-
-## 3. Parameters
-
-### 3.1. Overview
-
-### 3.2. Original checkpoint
-
-### 3.3. Flax BART model in Hugging Face
+### 4.3. Flax BART model in Hugging Face Transformers
 
 ![](assets/parameter-format-1.svg)
 
@@ -354,7 +194,7 @@ decoder
                 bias (768,)
 ```
 
-### 3.4. This project
+### 4.4. JAX parameters in this project
 
 ![](assets/parameter-format-2.svg)
 
@@ -441,19 +281,77 @@ decoder_layers
             bias (768,)
 ```
 
-## 4. Training
+## 5. Training
 
-## 5. Evaluation
+Should prepend EOS before every sentence in `dst`.
 
-## 6. Implementation Notes
+## 6. Evaluation
 
-This section records the problems I encountered during my implementation of the BART model and the final solutions.
+## 7. Generation
 
-### 6.1. The bart-large model itself does not work properly
+Typical generation process of the BART model involves the input sequences and their masks. The model generates the output autoregressively.
 
-This issue is reported in [huggingface/transformers#15559](https://github.com/huggingface/transformers/issues/15559). As a consequence, I only focus on implementing bart-base in this project, and not bart-large.
+While greedy decoding is the simplest generation algorithm for autoregressive language models, other algorithms like beam search and sampling can improve the quality of the generated sentences and therefore improve performance. In this project, we refrain from implementing these generation algorithms and leave the work to the Hugging Face Transformers library.
 
-### 6.2. `np.std` and `torch.std` are different
+However, generation functions in the Hugging Face Transformers library are coupled with the implementation of their original models, which makes them inaccessible for customized models. To tackle this problem, we convert our model to a regular Hugging Face Transformer model.
+
+## 8. Inconsistency Analysis
+
+We analyse the inconsistency between the description of the BART model in the literature and the actual BART implementation.
+
+In section 2.1 of the BART paper, the authors stated that BART uses the standard Transformer architecture except for the activation function and initialization. We examine other notable differences between BART and the standard Transformer.
+
+### 8.1. BART has learnable parameters for Layer Norm
+
+Layer Norm is calculated by this formula:
+
+$$
+y = \frac{x-\textbf{E}[x]}{\sqrt{\mathrm{Var}[x]+\epsilon}} * \gamma + \beta
+$$
+
+In which $\gamma$ and $\beta$ are learnable parameters.
+
+In section 7 of the Transformer paper, it is said that the Transformer architecture is implemented in the [tensorflow/tensor2tensor](https://github.com/tensorflow/tensor2tensor) library. In the library, [`LayerNormalization`](https://github.com/tensorflow/tensor2tensor/blob/c81d770/tensor2tensor/models/research/residual_shuffle_exchange.py#L40-L41) does not contain learnable parameters.
+
+### 8.2. BART has extra bias parameters for _Q_, _K_ and _V_
+
+Similar to Layer Norm, BART also has has extra bias parameters for $Q$, $K$ and $V$. It seems that the authors of the BART paper are unaware of this, since they refer $Q$, $K$ and $V$ as 'projection matrix' instead of 'linear layers' in the Section 3.4 of the BART paper.
+
+### 8.3. Positional encoding is learned rather than fixed
+
+In Section 3.5 of the Transformer paper, it is said that the positional encoding is fixed and is calculated by sine and cosine functions:
+
+$$
+PE_{(pos,2i)} = sin(pos/10000^{2i/d_\mathrm{model}})
+$$
+
+$$
+PE_{(pos,2i+1)} = cos(pos/10000^{2i/d_\mathrm{model}})
+$$
+
+In BART, however, positional embedding is a learned parameter. The authors of BART seems to be aware of this, since they wrote in Section 3.4 of BART that they were updating the BART positional embeddings in the first training stage of machine translation.
+
+### 8.4. Positional encoding has an offset of 2
+
+In BART, the positional encoding has an offset of 2, which means that the 0-th token uses the second positional encoding, the first token uses the third positional encoding, an so on. The first two positions of the positional encoding is never used.
+
+### 8.5. BART uses tied word embeddings
+
+BART uses tied word embeddings on top of the output of the final layer of the decoder. In regular Transformer architecture, the layer is a linear layer used for classification. In BART, however, it is the transpose of the word embedding.
+
+### 8.6. BART has extra dropout after activation
+
+BART has extra dropout after activation, while Transformer do not have this.
+
+## 9. Notes on Implementation
+
+This section records the problems we encountered during my implementation of the BART model and the final solutions.
+
+### 9.1. bart-large has intrinsic problems
+
+This issue is reported in [huggingface/transformers#15559](https://github.com/huggingface/transformers/issues/15559). As a consequence, we only focus on implementing bart-base in this project, and not bart-large.
+
+### 9.2. `np.std` and `torch.std` are different
 
 ```python
 import torch
@@ -468,7 +366,7 @@ It is because in `np.std` the denominator is _n_, while in `torch.std` it is _n_
 
 However, for the standard deviation in Layer Norm, the denominator is always n in either PyTorch or NumPy.
 
-### 6.3. Computations on TPU are in low precision by default
+### 9.3. Computations on TPU are in low precision by default
 
 JAX uses bfloat16 for matrix multiplication on TPU by default, even if the data type is float32. See [google/jax#9973](https://github.com/google/jax/issues/9973) for details.
 
@@ -484,26 +382,4 @@ print((a * b).item())  # 0.25039297342300415
 
 For neural network training, however, reducing the accuracy is worthwhile because it can significantly reduce the training time, according to Tom's comments in the above issue.
 
-### 6.4. BART has extra bias parameters for Layer Norm
-
-In section 2.1 of the BART paper, it is stated that BART uses the standard Transformer architecture, except for the activation function and initialization. However, this is not true because BART has extra bias parameters for Layer Norm.
-
-TODO: Add the formula of Layer Norm here.
-
-TODO: Add a proof that the original Transformer architecture does not have bias for Layer Norm.
-
-### 6.5. BART has extra bias parameters for _Q_, _K_ and _V_
-
-Besides Layer Norm, BART also has has extra bias parameters for _Q_, _K_ and _V_.
-
-TODO: Add demonstration.
-
-### 6.6. Positional encoding is learned rather than fixed
-
-### 6.7. Positional encoding has an offset of 2
-
-### 6.8. BART uses tied word embeddings
-
-### 6.9. BART has extra dropout after activation
-
-### 6.10. Hugging Face Transformers 4.17.0 is not compactible with JAX 0.3.4
+### 9.4. Weight matrix of linear layer is transposed in PyTorch
