@@ -18,11 +18,15 @@
     * [8.4. Positional encoding has an offset of 2](#84-positional-encoding-has-an-offset-of-2)
     * [8.5. BART uses tied word embeddings](#85-bart-uses-tied-word-embeddings)
     * [8.6. BART has extra dropout after activation](#86-bart-has-extra-dropout-after-activation)
+    * [8.7. BART uses an additional decoder start token](#87-bart-uses-an-additional-decoder-start-token)
+    * [8.8. BART tokenizer encodes the first word of a sentence differently](#88-bart-tokenizer-encodes-the-first-word-of-a-sentence-differently)
 * [9. Notes on Implementation](#9-notes-on-implementation)
     * [9.1. bart-large has intrinsic problems](#91-bart-large-has-intrinsic-problems)
     * [9.2. np.std and torch.std are different](#92-npstd-and-torchstd-are-different)
     * [9.3. Computations on TPU are in low precision by default](#93-computations-on-tpu-are-in-low-precision-by-default)
     * [9.4. Weight matrix of linear layer is transposed in PyTorch](#94-weight-matrix-of-linear-layer-is-transposed-in-pytorch)
+    * [9.5. Layer Norm of PyTorch and Flax are slightly different](#95-layer-norm-of-pytorch-and-flax-are-slightly-different)
+* [10. Bug Reports to Upstream Projects](#10-bug-reports-to-upstream-projects)
 
 ## 1. Motivation
 
@@ -38,13 +42,13 @@ This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoo
 
 ## 2. Environment Setup
 
-1\. Create a Cloud TPU VM v3-8 with TPU software version v2-nightly20210914
+(1) Create a Cloud TPU VM v3-8 with TPU software version v2-nightly20210914
 
-2\. Install Python 3.10
+(2) Install Python 3.10
 
-3\. Create virtualenv
+(3) Create a virtual environment
 
-4\. Install JAX with TPU support
+(4) Install JAX with TPU support
 
 ```sh
 pip install -U pip
@@ -52,7 +56,7 @@ pip install -U wheel
 pip install "jax[tpu]==0.3.5" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
-5\. Install TPU version of Tensorflow
+(5) Install TPU version of Tensorflow
 
 ```sh
 wget https://gist.github.com/ayaka14732/a22234f394d60a28545f76cff23397c0/raw/e6c6ffea91b45a146189b52fea7155b1305bf78e/tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.0
@@ -62,7 +66,7 @@ pip install tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl
 rm -f tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl*
 ```
 
-6\. Install other required Python packages
+(6) Install other required Python packages
 
 ```sh
 pip install -r requirements.txt
@@ -322,11 +326,11 @@ Similar to Layer Norm, BART also has has extra bias parameters for $Q$, $K$ and 
 In Section 3.5 of the Transformer paper, it is said that the positional encoding is fixed and is calculated by sine and cosine functions:
 
 $$
-PE_{(pos,2i)} = sin(pos/10000^{2i/d_\mathrm{model}})
+PE_{(pos,2i)} = \sin(pos/10000^{2i/d_\mathrm{model}})
 $$
 
 $$
-PE_{(pos,2i+1)} = cos(pos/10000^{2i/d_\mathrm{model}})
+PE_{(pos,2i+1)} = \cos(pos/10000^{2i/d_\mathrm{model}})
 $$
 
 In BART, however, positional embedding is a learned parameter. The authors of BART seems to be aware of this, since they wrote in Section 3.4 of BART that they were updating the BART positional embeddings in the first training stage of machine translation.
@@ -342,6 +346,26 @@ BART uses tied word embeddings on top of the output of the final layer of the de
 ### 8.6. BART has extra dropout after activation
 
 BART has extra dropout after activation, while Transformer do not have this.
+
+### 8.7. BART uses an additional decoder start token
+
+TODO: Confirm that Transformer does not use this.
+
+Related: <https://stackoverflow.com/q/64904840>
+
+### 8.8. BART tokenizer encodes the first word of a sentence differently
+
+```python
+from transformers import BartTokenizer
+
+tokenizer = BartTokenizer.from_pretrained('facebook/bart-base')
+inputs = tokenizer(['go go go'], return_tensors='np')
+inputs.input_ids.tolist()
+```
+
+TODO: Does Chinese BART have this issue?
+
+Related: <https://discuss.huggingface.co/t/bpe-tokenizers-and-spaces-before-words/475>
 
 ## 9. Notes on Implementation
 
@@ -383,3 +407,40 @@ print((a * b).item())  # 0.25039297342300415
 For neural network training, however, reducing the accuracy is worthwhile because it can significantly reduce the training time, according to Tom's comments in the above issue.
 
 ### 9.4. Weight matrix of linear layer is transposed in PyTorch
+
+Weight matrix of linear layer is transposed in PyTorch, but not in Flax. Therefore, to convert model parameters between PyTorch and Flax, it is always needed to transpose the weight matrices.
+
+In Flax:
+
+```python
+import flax.linen as nn
+import jax.numpy as np
+import jax.random as rand
+linear = nn.Dense(5)
+key = rand.PRNGKey(42)
+params = linear.init(key, np.zeros((3,)))
+print(params['params']['kernel'].shape)  # (3, 5)
+```
+
+In PyTorch:
+
+```python
+import torch.nn as nn
+linear = nn.Linear(3, 5)
+print(linear.weight.shape)  # (5, 3), not (3, 5)
+```
+
+This can cause sneaky bugs for bart-base, in which the _Q_, _K_, _V_ matrices are square matrices. If the matrices are not transposed, there will be no shape error, but the result will be totally incorrect.
+
+### 9.5. Layer Norm of PyTorch and Flax are slightly different
+
+## 10. Bug Reports to Upstream Projects
+
+This is a list of bugs we spotted while working on this project:
+
+- <https://github.com/google/jax/issues/9642>
+- <https://github.com/google/jax/issues/9973>
+- <https://github.com/google/jax/issues/10192>
+- <https://github.com/huggingface/transformers/issues/16622>
+- <https://github.com/huggingface/transformers/issues/16678>
+- <https://github.com/huggingface/transformers/issues/16684>
