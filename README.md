@@ -1,33 +1,5 @@
 # JAX Implementation of bart-base
 
-* [1. Motivation](#1-motivation)
-* [2. Environment Setup](#2-environment-setup)
-* [3. Architecture](#3-architecture)
-* [4. Parameters](#4-parameters)
-    * [4.1. Overview](#41-overview)
-    * [4.2. Original checkpoint](#42-original-checkpoint)
-    * [4.3. Flax BART model in Hugging Face Transformers](#43-flax-bart-model-in-hugging-face-transformers)
-    * [4.4. JAX parameters in this project](#44-jax-parameters-in-this-project)
-* [5. Training](#5-training)
-* [6. Evaluation](#6-evaluation)
-* [7. Generation](#7-generation)
-* [8. Inconsistency Analysis](#8-inconsistency-analysis)
-    * [8.1. BART has learnable parameters for Layer Norm](#81-bart-has-learnable-parameters-for-layer-norm)
-    * [8.2. BART has extra bias parameters for <em>Q</em>, <em>K</em> and <em>V</em>](#82-bart-has-extra-bias-parameters-for-q-k-and-v)
-    * [8.3. Positional encoding is learned rather than fixed](#83-positional-encoding-is-learned-rather-than-fixed)
-    * [8.4. Positional encoding has an offset of 2](#84-positional-encoding-has-an-offset-of-2)
-    * [8.5. BART uses tied word embeddings](#85-bart-uses-tied-word-embeddings)
-    * [8.6. BART has extra dropout after activation](#86-bart-has-extra-dropout-after-activation)
-    * [8.7. BART uses an additional decoder start token](#87-bart-uses-an-additional-decoder-start-token)
-    * [8.8. BART tokenizer encodes the first word of a sentence differently](#88-bart-tokenizer-encodes-the-first-word-of-a-sentence-differently)
-* [9. Notes on Implementation](#9-notes-on-implementation)
-    * [9.1. bart-large has intrinsic problems](#91-bart-large-has-intrinsic-problems)
-    * [9.2. np.std and torch.std are different](#92-npstd-and-torchstd-are-different)
-    * [9.3. Computations on TPU are in low precision by default](#93-computations-on-tpu-are-in-low-precision-by-default)
-    * [9.4. Weight matrix of linear layer is transposed in PyTorch](#94-weight-matrix-of-linear-layer-is-transposed-in-pytorch)
-    * [9.5. Layer Norm of PyTorch and Flax are slightly different](#95-layer-norm-of-pytorch-and-flax-are-slightly-different)
-* [10. Bug Reports to Upstream Projects](#10-bug-reports-to-upstream-projects)
-
 ## 1. Motivation
 
 This project is a JAX implementation of the [bart-base](https://arxiv.org/abs/1910.13461) model. It is developed with two objectives in mind:
@@ -47,6 +19,11 @@ This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoo
 (2) Install Python 3.10
 
 (3) Create a virtual environment
+
+```sh
+python3.10 -m venv ./venv
+. ./venv/bin/activate
+```
 
 (4) Install JAX with TPU support
 
@@ -433,13 +410,3 @@ print(linear.weight.shape)  # (5, 3), not (3, 5)
 This can cause sneaky bugs for bart-base, in which the _Q_, _K_, _V_ matrices are square matrices. If the matrices are not transposed, there will be no shape error, but the result will be totally incorrect.
 
 ### 9.5. Layer Norm of PyTorch and Flax are slightly different
-
-## 10. Bug Reports to Upstream Projects
-
-This is a list of bugs we spotted while working on this project:
-
-- <https://github.com/google/jax/issues/9642>
-- <https://github.com/google/jax/issues/9973>
-- <https://github.com/google/jax/issues/10192>
-- <https://github.com/huggingface/transformers/issues/16622>
-- <https://github.com/huggingface/transformers/issues/16678>

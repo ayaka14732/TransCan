@@ -1,10 +1,11 @@
 autopep8
 tqdm
+wandb
 datasets==2.0.0
 torch==1.11.0
-jax==0.3.4
-jaxlib==0.3.2
-flax==0.4.1
-optax==0.1.1
-# https://github.com/huggingface/transformers/issues/16401
-git+https://github.com/huggingface/transformers.git@aa6cfe9#egg=transformers
+jax==0.3.13
+jaxlib==0.3.10
+libtpu-nightly==0.1.dev20220504
+flax==0.4.2
+optax==0.1.2
+transformers==4.19.2
