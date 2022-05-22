@@ -30,7 +30,7 @@ python3.10 -m venv ./venv
 ```sh
 pip install -U pip
 pip install -U wheel
-pip install "jax[tpu]==0.3.5" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+pip install "jax[tpu]==0.3.13" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
 (5) Install TPU version of Tensorflow
