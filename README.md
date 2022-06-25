@@ -14,6 +14,8 @@ This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoo
 
 ## 2. Environment Setup
 
+### TPU
+
 (1) Create a Cloud TPU VM v3-8 with TPU software version v2-nightly20210914
 
 (2) Install Python 3.10
@@ -33,17 +35,28 @@ pip install -U wheel
 pip install "jax[tpu]==0.3.13" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 ```
 
-(5) Install TPU version of Tensorflow
+(5) Install other required Python packages
 
 ```sh
-wget https://gist.github.com/ayaka14732/a22234f394d60a28545f76cff23397c0/raw/e6c6ffea91b45a146189b52fea7155b1305bf78e/tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.0
-wget https://gist.github.com/ayaka14732/a22234f394d60a28545f76cff23397c0/raw/e6c6ffea91b45a146189b52fea7155b1305bf78e/tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.1
-cat tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.0 tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl.1 > tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl
-pip install tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl
-rm -f tensorflow-2.8.0-cp310-cp310-linux_x86_64.whl*
+pip install -r requirements.txt
 ```
 
-(6) Install other required Python packages
+### CPU
+
+(1) Create a virtual environment
+
+```sh
+python3.10 -m venv ./venv
+. ./venv/bin/activate
+```
+
+(2) Install JAX
+
+```sh
+pip install "jax[cpu]==0.3.13"
+```
+
+(3) Install other required Python packages
 
 ```sh
 pip install -r requirements.txt
