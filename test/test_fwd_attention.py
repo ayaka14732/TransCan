@@ -25,9 +25,9 @@ d_ff = 9
 src = rand(batch_size, max_sent_len, d_model)
 dst = rand(batch_size, max_sent_len, d_model)
 
-q_a = rand(d_model, n_heads,d_k)
-k_a = rand(d_model, n_heads,d_k)
-v_a = rand(d_model, n_heads,d_v)
+q_a = rand(d_model, n_heads, d_k)
+k_a = rand(d_model, n_heads, d_k)
+v_a = rand(d_model, n_heads, d_v)
 
 q_b = rand(n_heads, d_k)
 k_b = rand(n_heads, d_k)

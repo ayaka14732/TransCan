@@ -17,13 +17,13 @@ d_v = 6
 d_ff = 7
 d_model = 8
 
-self_attn_q_kernel = rand(d_model, n_heads,d_k)
+self_attn_q_kernel = rand(d_model, n_heads, d_k)
 self_attn_q_bias = rand(n_heads, d_k)
 
-self_attn_k_kernel = rand(d_model, n_heads,d_k)
+self_attn_k_kernel = rand(d_model, n_heads, d_k)
 self_attn_k_bias = rand(n_heads, d_k)
 
-self_attn_v_kernel = rand(d_model, n_heads,d_v)
+self_attn_v_kernel = rand(d_model, n_heads, d_v)
 self_attn_v_bias = rand(n_heads, d_v)
 
 self_attn_ff_kernel = rand(n_heads * d_v, d_model)
