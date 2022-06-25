@@ -86,8 +86,6 @@ The original model implementation and checkpoints are available in the [pytorch/
 
 ### 4.3. Flax BART model in Hugging Face Transformers
 
-![](assets/parameter-format-1.svg)
-
 ```
 shared
     embedding (50265, 768)
@@ -176,8 +174,6 @@ decoder
 ```
 
 ### 4.4. JAX parameters in this project
-
-![](assets/parameter-format-2.svg)
 
 ```
 embedding
