@@ -1,11 +1,9 @@
 autopep8
 tqdm
 wandb
-datasets==2.0.0
+datasets==2.3.2
 torch==1.11.0
 jax==0.3.13
-jaxlib==0.3.10
-libtpu-nightly==0.1.dev20220504
-flax==0.4.2
+flax==0.5.2
 optax==0.1.2
-transformers==4.19.2
+transformers==4.20.1
