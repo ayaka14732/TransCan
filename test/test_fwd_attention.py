@@ -25,9 +25,9 @@ d_ff = 9
 src = rand(batch_size, max_sent_len, d_model)
 dst = rand(batch_size, max_sent_len, d_model)
 
-q_a = rand(n_heads, d_model, d_k)
-k_a = rand(n_heads, d_model, d_k)
-v_a = rand(n_heads, d_model, d_v)
+q_a = rand(d_model, n_heads,d_k)
+k_a = rand(d_model, n_heads,d_k)
+v_a = rand(d_model, n_heads,d_v)
 
 q_b = rand(n_heads, d_k)
 k_b = rand(n_heads, d_k)
@@ -55,9 +55,9 @@ model = fnn.MultiHeadDotProductAttention(num_heads=n_heads, qkv_features=d_k * n
 # jax.tree_map(lambda x: x.shape, params['params'])
 
 output_ = model.apply({'params': {
-    'query': {'kernel': q_a.transpose(1, 0, 2), 'bias': q_b},
-    'key': {'kernel': k_a.transpose(1, 0, 2), 'bias': k_b},
-    'value': {'kernel': v_a.transpose(1, 0, 2), 'bias': v_b},
+    'query': {'kernel': q_a, 'bias': q_b},
+    'key': {'kernel': k_a, 'bias': k_b},
+    'value': {'kernel': v_a, 'bias': v_b},
     'out': {'kernel': ff_a.reshape(n_heads, d_v, d_ff), 'bias': ff_b},
 }}, dst, src, mask=mask)
 

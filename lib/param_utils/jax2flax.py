@@ -1,6 +1,6 @@
 def convert_qkv(params):
     return {
-        'kernel': params['kernel'].transpose(1, 0, 2).reshape(768, 768),
+        'kernel': params['kernel'].reshape(768, 768),
         'bias': params['bias'].reshape(768),
     }
 

@@ -203,13 +203,13 @@ encoder_layers
     0..5
         self_attn
             q_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             k_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             v_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             ff
                 kernel (768, 768)
@@ -230,13 +230,13 @@ decoder_layers
     0..5
         self_attn
             q_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             k_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             v_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             ff
                 kernel (768, 768)
@@ -246,13 +246,13 @@ decoder_layers
             bias (768,)
         cross_attn
             q_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             k_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             v_proj
-                kernel (12, 768, 64)
+                kernel (768, 12, 64)
                 bias (12, 64)
             ff
                 kernel (768, 768)

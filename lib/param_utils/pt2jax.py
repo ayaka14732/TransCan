@@ -17,7 +17,7 @@ def dotted_dict2nested_dict(params):
 
 def convert_qkv(params):
     return {
-        'kernel': params['weight'].T.reshape(768, 12, 64).transpose(1, 0, 2),
+        'kernel': params['weight'].T.reshape(768, 12, 64),
         'bias': params['bias'].reshape(12, 64),
     }
 

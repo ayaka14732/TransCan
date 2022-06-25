@@ -12,17 +12,22 @@ def fwd_attention(params: dict, src: np.ndarray, dst: np.ndarray, mask: np.ndarr
 
     _, _, d_k = q_proj['kernel'].shape
 
-    q = fwd_linear(q_proj, dst)
-    k = fwd_linear(k_proj, src)
-    v = fwd_linear(v_proj, src)
+    q = np.einsum('bdm,mhk->bdhk', dst, q_proj['kernel'])  # bs, dst_len, n_heads, d_k
+    k = np.einsum('bsm,mhk->bshk', src, k_proj['kernel'])  # bs, src_len, n_heads, d_k
+    v = np.einsum('bsm,mhv->bshv', src, v_proj['kernel'])  # bs, src_len, n_heads, d_v
 
-    qk = np.einsum('bkhm,bvhm->bhkv', q, k)
+    if 'bias' in q_proj:
+        q += q_proj['bias']  # bs, dst_len, n_heads, d_k
+        k += k_proj['bias']  # bs, src_len, n_heads, d_k
+        v += v_proj['bias']  # bs, src_len, n_heads, d_v
+
+    qk = np.einsum('bdhk,bshk->bhds', q, k)  # bs, n_heads, dst_len, src_len
     qk = qk / np.sqrt(d_k)
     qk = np.where(mask, qk, np.NINF)
     qk = nn.softmax(qk)
     qk = np.where(mask, qk, 0)
 
-    t = np.einsum('bhkv,bvhm->bkhm', qk, v)
+    t = np.einsum('bhds,bshv->bdhv', qk, v)
     d0, d1, d2, d3 = t.shape
     t = t.reshape(d0, d1, d2 * d3)
 
