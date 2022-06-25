@@ -4,13 +4,19 @@ def convert_qkv(params):
         'bias': params['bias'].reshape(768),
     }
 
+def convert_ff(params):
+    return {
+        'kernel': params['kernel'].reshape(768, 768),
+        'bias': params['bias'],
+    }
+
 def convert_transformer_encoder(params):
     return {
         'self_attn': {
             'q_proj': convert_qkv(params['self_attn']['q_proj']),
             'k_proj': convert_qkv(params['self_attn']['k_proj']),
             'v_proj': convert_qkv(params['self_attn']['v_proj']),
-            'out_proj': params['self_attn']['ff'],
+            'out_proj': convert_ff(params['self_attn']['ff']),
         },
         'self_attn_layer_norm': params['self_attn_layer_norm'],
         'fc1': params['ff0'],
@@ -24,14 +30,14 @@ def convert_transformer_decoder(params):
             'q_proj': convert_qkv(params['self_attn']['q_proj']),
             'k_proj': convert_qkv(params['self_attn']['k_proj']),
             'v_proj': convert_qkv(params['self_attn']['v_proj']),
-            'out_proj': params['self_attn']['ff'],
+            'out_proj': convert_ff(params['self_attn']['ff']),
         },
         'self_attn_layer_norm': params['self_attn_layer_norm'],
         'encoder_attn': {
             'q_proj': convert_qkv(params['cross_attn']['q_proj']),
             'k_proj': convert_qkv(params['cross_attn']['k_proj']),
             'v_proj': convert_qkv(params['cross_attn']['v_proj']),
-            'out_proj': params['cross_attn']['ff'],
+            'out_proj': convert_ff(params['cross_attn']['ff']),
         },
         'encoder_attn_layer_norm': params['cross_attn_layer_norm'],
         'fc1': params['ff0'],

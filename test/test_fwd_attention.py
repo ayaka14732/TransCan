@@ -33,7 +33,7 @@ q_b = rand(n_heads, d_k)
 k_b = rand(n_heads, d_k)
 v_b = rand(n_heads, d_v)
 
-ff_a = rand(n_heads * d_v, d_ff)
+ff_a = rand(n_heads, d_v, d_ff)
 ff_b = rand(d_ff)
 
 mask_dec_1d = np.ones((batch_size, max_sent_len), dtype=np.bool_)

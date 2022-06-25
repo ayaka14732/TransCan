@@ -27,7 +27,7 @@ self_attn_k_bias = rand(n_heads, d_k)
 self_attn_v_kernel = rand(d_model, n_heads, d_v)
 self_attn_v_bias = rand(n_heads, d_v)
 
-self_attn_ff_kernel = rand(n_heads * d_v, d_model)
+self_attn_ff_kernel = rand(n_heads, d_v, d_model)
 self_attn_ff_bias = rand(d_model)
 
 self_attn_layer_norm_scale = rand(d_model)
@@ -42,7 +42,7 @@ cross_attn_k_bias = rand(n_heads, d_k)
 cross_attn_v_kernel = rand(d_model, n_heads, d_v)
 cross_attn_v_bias = rand(n_heads, d_v)
 
-cross_attn_ff_kernel = rand(n_heads * d_v, d_model)
+cross_attn_ff_kernel = rand(n_heads, d_v, d_model)
 cross_attn_ff_bias = rand(d_model)
 
 cross_attn_layer_norm_scale = rand(d_model)

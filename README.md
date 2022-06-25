@@ -212,7 +212,7 @@ encoder_layers
                 kernel (768, 12, 64)
                 bias (12, 64)
             ff
-                kernel (768, 768)
+                kernel (12, 64, 768)
                 bias (768,)
         self_attn_layer_norm
             scale (768,)
@@ -239,7 +239,7 @@ decoder_layers
                 kernel (768, 12, 64)
                 bias (12, 64)
             ff
-                kernel (768, 768)
+                kernel (12, 64, 768)
                 bias (768,)
         self_attn_layer_norm
             scale (768,)
@@ -255,7 +255,7 @@ decoder_layers
                 kernel (768, 12, 64)
                 bias (12, 64)
             ff
-                kernel (768, 768)
+                kernel (12, 64, 768)
                 bias (768,)
         cross_attn_layer_norm
             scale (768,)

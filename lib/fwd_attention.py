@@ -1,8 +1,6 @@
 import jax.nn as nn
 import jax.numpy as np
 
-from .fwd_linear import fwd_linear
-
 def fwd_attention(params: dict, src: np.ndarray, dst: np.ndarray, mask: np.ndarray) -> np.ndarray:
     # params
     q_proj: dict = params['q_proj']  # linear
@@ -27,9 +25,11 @@ def fwd_attention(params: dict, src: np.ndarray, dst: np.ndarray, mask: np.ndarr
     qk = nn.softmax(qk)
     qk = np.where(mask, qk, 0)
 
-    t = np.einsum('bhds,bshv->bdhv', qk, v)
-    d0, d1, d2, d3 = t.shape
-    t = t.reshape(d0, d1, d2 * d3)
+    qkv = np.einsum('bhds,bshv->bdhv', qk, v)  # bs, dst_len, n_heads, d_v
 
-    t = fwd_linear(ff, t)
-    return t
+    output = np.einsum('bdhv,hvm->bdm', qkv, ff['kernel'])  # bs, dst_len. d_model
+
+    if 'bias' in ff:
+        output += ff['bias']  # bs, dst_len. d_model
+
+    return output

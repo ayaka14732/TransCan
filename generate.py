@@ -31,7 +31,7 @@ def fwd_encode(params: dict, src: np.ndarray, mask_enc: np.ndarray) -> np.ndarra
 
 tokenizer = BartTokenizer.from_pretrained('facebook/bart-base')
 
-sentences = ['Can you see the beautiful flowers <mask> alongside the track?', 'Upon graduation, <mask> herself.']
+sentences = ['Can you see the beautiful flowers <mask> alongside the track?', 'Upon graduation, <mask> of herself.']
 batch = tokenizer(sentences, padding=True, return_tensors='jax')
 
 src = batch.input_ids
