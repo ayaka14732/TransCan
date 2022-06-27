@@ -14,7 +14,7 @@ This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoo
 
 ## 2. Environment Setup
 
-### TPU
+### 2.1. TPU
 
 (1) Create a Cloud TPU VM v3-8 with TPU software version v2-nightly20210914
 
@@ -41,7 +41,7 @@ pip install "jax[tpu]==0.3.13" -f https://storage.googleapis.com/jax-releases/li
 pip install -r requirements.txt
 ```
 
-### CPU
+### 2.2. CPU
 
 (1) Create a virtual environment
 
@@ -273,7 +273,51 @@ decoder_layers
 
 ## 5. Training
 
-Should prepend EOS before every sentence in `dst`.
+### 5.1. Dataset preparation
+
+Extract Wikipedia dump by WikiExtractor, then use Bling Fire to split articles into sentences.
+
+```sh
+wget https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2
+python -m wikiextractor.WikiExtractor enwiki-latest-pages-articles.xml.bz2 --json -o dump
+python prepare_data.py
+```
+
+### 5.2. Tokenization
+
+The `[EOS]` token (`tokenizer.eos_token_id`) should be prepended before all sentences in `dst`.
+
+Example:
+
+```
+Input: ['<s>A flower.</s><pad>', '<s>Some good sentences.</s>']
+Output: ['</s><s>A flower.</s><pad>', '</s><s>Some good sentences.</s>']
+Input IDs: [[0, 250, 14214, 4, 2, 1], [0, 6323, 205, 11305, 4, 2]]
+Output IDs: [[2, 0, 250, 14214, 4, 2, 1], [2, 0, 6323, 205, 11305, 4, 2]]
+```
+
+<details>
+
+```python
+from transformers import BartTokenizer, BartForConditionalGeneration
+
+model_name = 'facebook/bart-base'
+tokenizer = BartTokenizer.from_pretrained(model_name)
+model = BartForConditionalGeneration.from_pretrained(model_name)
+
+sentences = ('A flower.', 'Some good sentences.')
+
+inputs = tokenizer(sentences, return_tensors='pt', max_length=6, padding='max_length', truncation=True)
+output = model.generate(inputs.input_ids)
+
+print('Input:', tokenizer.batch_decode(inputs.input_ids))
+print('Output:', tokenizer.batch_decode(output))
+
+print('Input IDs:', inputs.input_ids.tolist())
+print('Output IDs:', output.tolist())
+```
+
+</details>
 
 ## 6. Evaluation
 

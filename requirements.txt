@@ -7,3 +7,5 @@ jax==0.3.13
 flax==0.5.2
 optax==0.1.2
 transformers==4.20.1
+wikiextractor
+blingfire

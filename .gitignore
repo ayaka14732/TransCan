@@ -3,3 +3,6 @@ __pycache__
 *.dat
 .idea
 /wandb
+*.aria2
+/enwiki-latest-pages-articles.xml.bz2
+/dump
