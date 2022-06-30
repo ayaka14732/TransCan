@@ -3,7 +3,7 @@ tqdm
 wandb
 datasets==2.3.2
 torch==1.11.0
-jax==0.3.13
+jax==0.3.14
 flax==0.5.2
 optax==0.1.2
 transformers==4.20.1
