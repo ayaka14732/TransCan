@@ -1,8 +1,13 @@
 /venv
 __pycache__
+*.pyc
 *.dat
 .idea
 /wandb
 *.aria2
 /enwiki-latest-pages-articles.xml.bz2
 /dump
+/dump2
+/1.py
+/2.py
+/3.py

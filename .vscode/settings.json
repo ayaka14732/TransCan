@@ -1,0 +1,28 @@
+{
+    "cSpell.words": [
+        "PRNG",
+        "arange",
+        "asarray",
+        "astype",
+        "bfloat",
+        "cifar",
+        "einsum",
+        "enwiki",
+        "fwdwd",
+        "gelu",
+        "hstack",
+        "jaxtyped",
+        "jaxtyping",
+        "ndarray",
+        "optax",
+        "relu",
+        "sharded",
+        "stax",
+        "tqdm",
+        "trange",
+        "vocab",
+        "vocab",
+        "vstack",
+        "wandb"
+    ]
+}

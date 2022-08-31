@@ -2,7 +2,7 @@ from flax.serialization import msgpack_serialize, msgpack_restore
 
 from .assert_tree_equal import assert_tree_equal
 
-def save_params(params, filename, roundtrip_check=True):
+def save_params(params, filename, roundtrip_check=False):
     serialized_params = msgpack_serialize(params)
 
     if roundtrip_check:
