@@ -133,3 +133,19 @@ print(linear.weight.shape)  # (5, 3), not (3, 5)
 This can cause sneaky bugs for bart-base, in which the _Q_, _K_, _V_ matrices are square matrices. If the matrices are not transposed, there will be no shape error, but the result will be totally incorrect.
 
 ### Layer Norm of PyTorch and Flax are slightly different
+
+
+### Code quality
+
+TODO: Clean up
+
+If train from scratch, always add `add_prefix_space=True` when initialise the tokenizer
+
+not necessarily true! Cannot have, can cause sneaky bugs. Remember to check it before committing
+
+```
+rand.PRNGKey > random.wrapper.seed2key
+rand.split > random.wrapper.split_key
+rand.KeyArray > lib.random.wrapper.KeyArray
+...; del key
+```
