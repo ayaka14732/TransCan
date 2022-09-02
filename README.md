@@ -1,5 +1,11 @@
 # JAX Implementation of bart-base
 
+This project is a JAX implementation of the [bart-base](https://arxiv.org/abs/1910.13461) model. The aim of this project is to demonstrate how Transformer-based language models can be implemented using JAX and trained on Google Cloud TPUs.
+
+This project is supported by Cloud TPUs from Google's [TPU Research Cloud](https://sites.research.google/trc/about/) (TRC).
+
+This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoongko/transformer), while the code for this project is entirely written by myself.
+
 * [News](#news)
 * [Environment Setup](#environment-setup)
 * [Model Architecture](#model-architecture)
@@ -11,10 +17,7 @@
 * [Training](#training)
 * [Evaluation](#evaluation)
 * [Generation](#generation)
-
-This project is a JAX implementation of the [bart-base](https://arxiv.org/abs/1910.13461) model. The aim of this project is to demonstrate how Transformer-based language models can be implemented using JAX and trained on Cloud TPUs.
-
-This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoongko/transformer), while the code for this project is entirely written by myself.
+* [Analysis](#analysis)
 
 ## News
 
@@ -131,3 +134,5 @@ Typical generation process of the BART model involves the input sequences and th
 While greedy decoding is the simplest generation algorithm for autoregressive language models, other algorithms like beam search and sampling can improve the quality of the generated sentences and therefore improve performance. In this project, we refrain from implementing these generation algorithms and leave the work to the Hugging Face Transformers library.
 
 However, generation functions in the Hugging Face Transformers library are coupled with the implementation of their original models, which makes them inaccessible for customized models. To tackle this problem, we convert our model to a regular Hugging Face Transformer model.
+
+## Analysis
