@@ -1,10 +1,10 @@
 import jax.numpy as np
-from jaxtyping import f as F, u32 as U32, PyTree, jaxtyped
+from jaxtyping import f as F, u16 as U16, PyTree, jaxtyped
 from typeguard import check_type, typechecked as typechecker
 
 @jaxtyped
 @typechecker
-def fwd_embedding(params: PyTree, x: U32['*dims']) -> F['*dims embed_size']:
+def fwd_embedding(params: PyTree, x: U16['*dims']) -> F['*dims embed_size']:
     # params
     embedding: np.ndarray = params['embedding']  # array
 

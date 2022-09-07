@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as np
-from jaxtyping import b as B, f as F, u32 as U32, jaxtyped
+from jaxtyping import b as B, f as F, u16 as U16, jaxtyped
 import optax
 from typeguard import check_type, typechecked as typechecker
 
@@ -8,7 +8,7 @@ from typeguard import check_type, typechecked as typechecker
 @typechecker
 def cross_entropy_loss(
     logits: F['bs dst_len n_classes'],
-    labels: U32['bs dst_len'],
+    labels: U16['bs dst_len'],
     mask_dec_1d: B['bs dst_len'],
     n_classes: int,
 ) -> F['']:
