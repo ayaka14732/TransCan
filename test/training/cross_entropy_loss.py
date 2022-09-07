@@ -17,7 +17,7 @@ labels = np.array([
     [4, 2],
     [1, 5],
     [8, 0],
-], dtype=np.uint32)
+], dtype=np.uint16)
 assert np.all(labels >= 0) and np.all(labels < n_classes)
 assert labels.shape == (batch_size, seq_len)
 mask_dec_1d = np.ones((batch_size, seq_len), dtype=np.bool_)

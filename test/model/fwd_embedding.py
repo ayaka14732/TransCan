@@ -12,7 +12,7 @@ vocab_size = 128
 embed_size = 3
 
 embedding = rand(vocab_size, embed_size)
-x = np.array([0, 3, 15], dtype=np.uint32)
+x = np.array([0, 3, 15], dtype=np.uint16)
 
 params = {'embedding': embedding}
 

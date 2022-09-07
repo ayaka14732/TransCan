@@ -22,9 +22,9 @@ def tokenization_worker(x) -> np.ndarray:
     x = tokenizer(sentences, return_tensors='np', max_length=256, padding='max_length', truncation=True, add_prefix_space=True)
     y = tokenizer(distorted_sentences, return_tensors='np', max_length=256, padding='max_length', truncation=True, add_prefix_space=True)
 
-    src = x.input_ids.astype(np.uint32)
+    src = x.input_ids.astype(np.uint16)
     mask_enc_1d = x.attention_mask.astype(np.bool_)
-    dst = y.input_ids.astype(np.uint32)
+    dst = y.input_ids.astype(np.uint16)
     mask_dec_1d = y.attention_mask.astype(np.bool_)
 
     return src, mask_enc_1d, dst, mask_dec_1d

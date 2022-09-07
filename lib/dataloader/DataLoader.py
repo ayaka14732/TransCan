@@ -32,7 +32,7 @@ def make_data(src: onp.ndarray, mask_enc_1d: onp.ndarray, dst: onp.ndarray, mask
 
     bos_id = 2
 
-    eoss = onp.ones((batch_size, 1), dtype=onp.uint32) * bos_id
+    eoss = onp.ones((batch_size, 1), dtype=onp.uint16) * bos_id
     dst = onp.hstack((eoss, dst[:, 1:]))
 
     trues = onp.ones((batch_size, 1), dtype=onp.bool_)
