@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as np
 from transformers import BartTokenizer
-from typing import List, Tuple
+from typing import Tuple
 
 from ..preprocessing.distort_sentence import distort_sentence
 from ..random.wrapper import KeyArray, split_key
@@ -9,7 +9,7 @@ from ..random.wrapper import KeyArray, split_key
 def tokenization_worker(x) -> np.ndarray:
     jax.config.update('jax_platforms', 'cpu')  # enforce CPU in subprocesses
 
-    # sentences: List[str], key: KeyArray
+    # sentences: list[str], key: KeyArray
     sentences, key = x
 
     global tokenizer

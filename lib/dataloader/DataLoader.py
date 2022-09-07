@@ -2,7 +2,7 @@ from collections import namedtuple
 import multiprocessing
 import numpy as onp
 import random
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from .device_split import device_split
 from .ProcessPoolExecutorWithQueueSizeLimit import ProcessPoolExecutorWithQueueSizeLimit
@@ -56,7 +56,7 @@ def make_data(src: onp.ndarray, mask_enc_1d: onp.ndarray, dst: onp.ndarray, mask
 
     return Data(src, dst, mask_enc_1d, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, labels)
 
-def chunks(lst: List[Any], chunk_size: int) -> List[List[Any]]:
+def chunks(lst: list[Any], chunk_size: int) -> list[list[Any]]:
     '''Yield successive n-sized chunks from lst.'''
     return [lst[i:i+chunk_size] for i in range(0, len(lst), chunk_size)]
 

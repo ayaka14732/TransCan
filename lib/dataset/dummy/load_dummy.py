@@ -1,9 +1,8 @@
 from os.path import abspath, dirname, join
-from typing import List
 
 here = dirname(abspath(__file__))
 
-def load_dummy() -> List[str]:
+def load_dummy() -> list[str]:
     english_sentences = {}
 
     with open(join(here, 'tatoeba-uyghur-english-2022-08-28.tsv')) as f:

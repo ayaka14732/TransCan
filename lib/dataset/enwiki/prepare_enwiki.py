@@ -4,7 +4,6 @@ from os import mkdir
 from os.path import expanduser, exists, join
 import subprocess
 from tqdm import tqdm
-from typing import List
 
 from ...utils.download_file import download_file
 from .preprocess_enwiki import preprocess_enwiki
@@ -20,7 +19,7 @@ def preprocess_enwiki_outer(f_in: str) -> None:
     f_out = join(dir_out, filename)
     preprocess_enwiki(f_in, f_out)
 
-def process_raw_files(raw_files: List[str]) -> None:
+def process_raw_files(raw_files: list[str]) -> None:
     ctx = multiprocessing.get_context('spawn')
     with ctx.Pool() as p:
         for _ in tqdm(p.imap_unordered(preprocess_enwiki_outer, raw_files), total=len(raw_files)):

@@ -1,8 +1,7 @@
 import blingfire
 import json
-from typing import List
 
-def article_to_sentences(text: str) -> List[str]:
+def article_to_sentences(text: str) -> list[str]:
     '''
     ```python
     >>> article_to_sentences('A cat. The mouse.')
@@ -17,7 +16,7 @@ def article_to_sentences(text: str) -> List[str]:
         return []
     return blingfire.text_to_sentences(text).split('\n')
 
-def preprocess_enwiki(filename_in: str, filename_out: str) -> List[str]:
+def preprocess_enwiki(filename_in: str, filename_out: str) -> list[str]:
     all_sentence = []
     with open(filename_in, encoding='utf-8') as f:
         for line in f:
