@@ -21,6 +21,10 @@ This project is inspired by [hyunwoongko/transformer](https://github.com/hyunwoo
 
 ## News
 
+**2022-10-08:** (On-going) I am fine-tuning [fnlp/bart-base-chinese](https://huggingface.co/fnlp/bart-base-chinese) to develop a Mandarin-Taiwanese Hokkien translation model. See the [`twblg`](https://github.com/ayaka14732/bart-base-jax/tree/twblg) branch for details.
+
+**2022-09-27:** [Nixie](https://github.com/ztjhz) and I implemented [TrAVis](https://github.com/ayaka14732/TrAVis), a BERT attention visualiser that runs completely in-browser, based on this codebase. [[Twitter]](https://twitter.com/ayaka14732/status/1574627912162349056)
+
 **2022-03-27:** In addition to the regular implementation, I also implemented the model in a single line of Python code, by virtue of JAX's functional-style API. [[Twitter]](https://twitter.com/ayaka14732/status/1507955631109869574)
 
 ## Environment Setup
