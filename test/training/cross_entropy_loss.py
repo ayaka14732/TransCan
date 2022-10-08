@@ -22,4 +22,4 @@ assert np.all(labels >= 0) and np.all(labels < n_classes)
 assert labels.shape == (batch_size, seq_len)
 mask_dec_1d = np.ones((batch_size, seq_len), dtype=np.bool_)
 
-loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d, n_classes=n_classes)
+loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d)

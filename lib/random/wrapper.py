@@ -1,7 +1,7 @@
 import jax
-from jax._src.random import KeyArray
 import jax.numpy as np
 import jax.random as rand
+from jaxtyping import Array as KeyArray
 
 int32_min = np.iinfo(np.int32).min
 int32_max = np.iinfo(np.int32).max

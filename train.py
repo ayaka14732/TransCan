@@ -12,7 +12,6 @@ from lib.param_utils.save_params import save_params
 from lib.random.wrapper import seed2key, split_key
 from lib.training.cross_entropy_loss import cross_entropy_loss
 
-vocab_size = 50265  # BartTokenizer.from_pretrained('facebook/bart-base').vocab_size
 pad_token_id = 1  # BartTokenizer.from_pretrained('facebook/bart-base').pad_token_id
 optimizer = None
 
@@ -22,7 +21,7 @@ def train_forward(params, src, dst, mask_dec_1d, mask_enc, mask_dec, mask_dec_en
     outputs = fwd_transformer(params, src, dst, mask_enc, mask_dec, mask_dec_enc, dropout_key=dropout_key)
     lm_head = params['embedding']['embedding'].T
     logits = outputs @ lm_head
-    loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d, n_classes=vocab_size) / len(labels)
+    loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d) / len(labels)
     return loss
 
 @functools.partial(jax.pmap, axis_name='num_devices')

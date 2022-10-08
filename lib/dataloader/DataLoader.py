@@ -1,8 +1,9 @@
-from collections import namedtuple
+from jaxtyping import Array, Bool as B, UInt16 as U16, jaxtyped
 import multiprocessing
 import numpy as onp
 import random
-from typing import Any, Optional
+from typeguard import typechecked as typechecker
+from typing import Any, NamedTuple, Optional
 
 from .device_split import device_split
 from .ProcessPoolExecutorWithQueueSizeLimit import ProcessPoolExecutorWithQueueSizeLimit
@@ -11,18 +12,24 @@ from ..dataset.dummy.load_dummy import load_dummy
 from ..dataset.enwiki.load_enwiki import load_enwiki
 from ..random.wrapper import KeyArray, key2seed, split_key
 
-Data = namedtuple('Data', (
-    'src',
-    'dst',
-    'mask_enc_1d',
-    'mask_dec_1d',
-    'mask_enc',
-    'mask_dec',
-    'mask_dec_enc',
-    'labels',
-))
+class Data(NamedTuple):
+    src: Array
+    dst: Array
+    mask_enc_1d: Array
+    mask_dec_1d: Array
+    mask_enc: Array
+    mask_dec: Array
+    mask_dec_enc: Array
+    labels: Array
 
-def make_data(src: onp.ndarray, mask_enc_1d: onp.ndarray, dst: onp.ndarray, mask_dec_1d: onp.ndarray) -> Data:
+@jaxtyped
+@typechecker
+def make_data(
+    src: U16[onp.ndarray, 'bs src_len'],
+    mask_enc_1d: B[onp.ndarray, 'bs src_len'], 
+    dst: U16[onp.ndarray, 'bs dst_len'],
+    mask_dec_1d: B[onp.ndarray, 'bs dst_len'],
+) -> Data:
     # TODO: better name
 
     # TODO: is this part correct?
@@ -45,16 +52,8 @@ def make_data(src: onp.ndarray, mask_enc_1d: onp.ndarray, dst: onp.ndarray, mask
 
     # TODO: flexible batch size
 
-    src = device_split(src)
-    dst = device_split(dst)
-    mask_enc_1d = device_split(mask_enc_1d)
-    mask_dec_1d = device_split(mask_dec_1d)
-    mask_enc = device_split(mask_enc)
-    mask_dec = device_split(mask_dec)
-    mask_dec_enc = device_split(mask_dec_enc)
-    labels = device_split(labels)
-
-    return Data(src, dst, mask_enc_1d, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, labels)
+    d = src, dst, mask_enc_1d, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, labels
+    return Data(*map(device_split, d))
 
 def chunks(lst: list[Any], chunk_size: int) -> list[list[Any]]:
     '''Yield successive n-sized chunks from lst.'''

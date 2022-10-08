@@ -1,19 +1,19 @@
 import jax.numpy as np
-from jaxtyping import f as F, PyTree, jaxtyped
+from jaxtyping import Array, Float as F, PyTree, jaxtyped
 from typeguard import check_type, typechecked as typechecker
 
 @jaxtyped
 @typechecker
-def fwd_linear(params: PyTree, x: F['...']) -> F['...']:
+def fwd_linear(params: PyTree, x: F[Array, '...']) -> F[Array, '...']:
     # params
-    kernel: np.ndarray = params['kernel']  # array
-    bias: np.ndarray = params['bias']  # array
+    kernel: Array = params['kernel']  # array
+    bias: Array = params['bias']  # array
 
-    check_type('kernel', kernel, F['...'])
-    check_type('bias', bias, F['single_dim'])
+    check_type('kernel', kernel, F[Array, '...'])
+    check_type('bias', bias, F[Array, 'single_dim'])
 
     # we don't need shape checking because `np.dot` guarantees it
     y = np.dot(x, kernel) + bias
-    check_type('y', y, F['...'])
+    check_type('y', y, F[Array, '...'])
 
     return y

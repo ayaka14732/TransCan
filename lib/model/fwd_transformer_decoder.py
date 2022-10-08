@@ -1,6 +1,6 @@
 import jax.nn as nn
 import jax.random as rand
-from jaxtyping import b as B, f as F, PyTree, jaxtyped
+from jaxtyping import Array, Bool as B, Float as F, PyTree, jaxtyped
 from typeguard import check_type, typechecked as typechecker
 
 from .dropout import dropout
@@ -13,12 +13,12 @@ from ..random.wrapper import KeyArray
 @typechecker
 def fwd_transformer_decoder(
     params: PyTree,
-    src: F['bs src_len d_model'],
-    dst: F['bs dst_len d_model'],
-    mask_dec: B['bs 1 dst_len dst_len'],
-    mask_dec_enc: B['bs 1 dst_len src_len'],
+    src: F[Array, 'bs src_len d_model'],
+    dst: F[Array, 'bs dst_len d_model'],
+    mask_dec: B[Array, 'bs 1 dst_len dst_len'],
+    mask_dec_enc: B[Array, 'bs 1 dst_len src_len'],
     dropout_key: KeyArray=None
-) -> F['bs dst_len d_model']:
+) -> F[Array, 'bs dst_len d_model']:
     # params
     self_attn: PyTree = params['self_attn']  # attention
     self_attn_layer_norm: PyTree = params['self_attn_layer_norm']  # layer norm
@@ -37,7 +37,7 @@ def fwd_transformer_decoder(
         dst = dropout(subkeys[0], dst)
     dst = dst + dst_
     dst = fwd_layer_norm(self_attn_layer_norm, dst)
-    check_type('dst', dst, F['bs dst_len d_ff'])
+    check_type('dst', dst, F[Array, 'bs dst_len d_ff'])
 
     dst_ = dst
     src = fwd_attention(cross_attn, src, dst, mask_dec_enc)
@@ -45,7 +45,7 @@ def fwd_transformer_decoder(
         src = dropout(subkeys[1], src)
     t = src + dst_
     t = fwd_layer_norm(cross_attn_layer_norm, t)
-    check_type('t', t, F['bs dst_len d_ff'])
+    check_type('t', t, F[Array, 'bs dst_len d_ff'])
 
     t_ = t
     t = fwd_linear(ff0, t)
@@ -57,6 +57,6 @@ def fwd_transformer_decoder(
         t = dropout(subkeys[3], t)
     t = t + t_
     t = fwd_layer_norm(final_layer_norm, t)
-    check_type('t', t, F['bs dst_len d_model'])
+    check_type('t', t, F[Array, 'bs dst_len d_model'])
 
     return t
