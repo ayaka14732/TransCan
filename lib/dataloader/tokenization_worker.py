@@ -1,7 +1,6 @@
 import jax
 import jax.numpy as np
 from transformers import BartTokenizer
-from typing import Tuple
 
 from ..preprocessing.distort_sentence import distort_sentence
 from ..random.wrapper import KeyArray, split_key

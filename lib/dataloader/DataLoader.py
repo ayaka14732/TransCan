@@ -1,11 +1,11 @@
-from jaxtyping import Array, Bool as B, UInt16 as U16, jaxtyped
+import jax
+from jaxtyping import Array, Bool as B, Shaped as S, UInt16 as U16, jaxtyped
 import multiprocessing
 import numpy as onp
 import random
 from typeguard import typechecked as typechecker
 from typing import Any, NamedTuple, Optional
 
-from .device_split import device_split
 from .ProcessPoolExecutorWithQueueSizeLimit import ProcessPoolExecutorWithQueueSizeLimit
 from .tokenization_worker import tokenization_worker
 from ..dataset.dummy.load_dummy import load_dummy
@@ -24,14 +24,24 @@ class Data(NamedTuple):
 
 @jaxtyped
 @typechecker
+def device_split(a: S[onp.ndarray, '...']) -> S[Array, '...']:
+    '''Splits the first axis of `a` evenly across the number of devices.'''
+    local_devices = jax.local_devices()
+    n_local_devices = jax.local_device_count()
+
+    batch_size, *shapes = a.shape
+    a = a.reshape(n_local_devices, batch_size // n_local_devices, *shapes)
+    b = jax.device_put_sharded(tuple(a), devices=local_devices)
+    return b
+
+@jaxtyped
+@typechecker
 def make_data(
     src: U16[onp.ndarray, 'bs src_len'],
     mask_enc_1d: B[onp.ndarray, 'bs src_len'], 
     dst: U16[onp.ndarray, 'bs dst_len'],
     mask_dec_1d: B[onp.ndarray, 'bs dst_len'],
 ) -> Data:
-    # TODO: better name
-
     # TODO: is this part correct?
     labels = dst
 
@@ -50,8 +60,6 @@ def make_data(
     mask_dec = onp.tril(onp.einsum('bi,bj->bij', mask_dec_1d, mask_dec_1d))[:, None]
     mask_dec_enc = onp.einsum('bi,bj->bij', mask_dec_1d, mask_enc_1d)[:, None]
 
-    # TODO: flexible batch size
-
     d = src, dst, mask_enc_1d, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, labels
     return Data(*map(device_split, d))
 
@@ -60,11 +68,18 @@ def chunks(lst: list[Any], chunk_size: int) -> list[list[Any]]:
     return [lst[i:i+chunk_size] for i in range(0, len(lst), chunk_size)]
 
 class DataLoader:
-    def __init__(self, dataset: str, key: KeyArray, batch_size: int, n_workers: Optional[int]=None, queue_size: int=64, chunk_size: Optional[int]=1024, should_shuffle: bool=True):
-        sentences = {
-            'enwiki': load_enwiki,
-            'dummy': load_dummy,
-        }[dataset]()
+    def __init__(self, dataset: str, key: KeyArray, batch_size_per_device: int, n_workers: Optional[int]=None, queue_size: int=64, chunk_size: Optional[int]=1024, should_shuffle: bool=True):
+        process_index = jax.process_index()
+        n_local_devices = jax.local_device_count()
+
+        if dataset == 'enwiki':
+            sentences = load_enwiki(show_progress_bar=process_index == 0)
+        elif dataset == 'dummy':
+            sentences = load_dummy()
+        else:
+            raise ValueError(f'Invalid dataset: {repr(dataset)}')
+
+        batch_size = batch_size_per_device * n_local_devices
 
         self.sentences = sentences
         self.key = key
@@ -75,28 +90,27 @@ class DataLoader:
         self.should_shuffle = should_shuffle
 
     def __iter__(self):
-        sentences = self.sentences
-        key = self.key
-        batch_size = self.batch_size
-        n_workers = self.n_workers
-        queue_size = self.queue_size
-        chunk_size = self.chunk_size
-        should_shuffle = self.should_shuffle
+        process_index = jax.process_index()
+        process_count = jax.process_count()
 
-        if should_shuffle:
-            key, subkey = split_key(key)
+        if self.should_shuffle:
+            self.key, subkey = split_key(self.key)
             seed = key2seed(subkey)
             rng = random.Random(seed)
             rng.shuffle(sentences)
 
-        sentences_chunked = chunks(sentences, chunk_size=chunk_size)
+        # TODO: is it plausible to split sentences at preprocessing time?
+        sentences_per_device = len(sentences) // process_count
+        sentences = sentences[process_index * sentences_per_device:(process_index + 1) * sentences_per_device]
+
+        sentences_chunked = chunks(sentences, chunk_size=self.chunk_size)
         n_sentences = len(sentences)
         n_chunks = len(sentences_chunked)
         print(f'INFO: Successfully split {n_sentences} sentences into {n_chunks} chunks.')
 
         ctx = multiprocessing.get_context('spawn')
-        with ProcessPoolExecutorWithQueueSizeLimit(queue_size=queue_size, max_workers=n_workers, mp_context=ctx) as executor:
-            key, *subkeys = split_key(key, num=n_chunks)
+        with ProcessPoolExecutorWithQueueSizeLimit(queue_size=self.queue_size, max_workers=self.n_workers, mp_context=ctx) as executor:
+            self.key, *subkeys = split_key(self.key, num=n_chunks)
             results = executor.map(tokenization_worker, zip(sentences_chunked, subkeys))
 
             src_ = None
@@ -112,7 +126,7 @@ class DataLoader:
                     mask_dec_1d = onp.vstack((mask_dec_1d_, mask_dec_1d))
 
                 while True:
-                    if src.shape[0] < batch_size:
+                    if src.shape[0] < self.batch_size:
                         src_ = src
                         mask_enc_1d_ = mask_enc_1d
                         dst_ = dst
@@ -120,7 +134,7 @@ class DataLoader:
 
                         break
 
-                    elif src.shape[0] == batch_size:
+                    elif src.shape[0] == self.batch_size:
                         src_ = None
                         mask_enc_1d_ = None
                         dst_ = None
@@ -135,11 +149,9 @@ class DataLoader:
                         dst_ = None
                         mask_dec_1d_ = None
 
-                        yield make_data(src[:batch_size], mask_enc_1d[:batch_size], dst[:batch_size], mask_dec_1d[:batch_size])
+                        yield make_data(src[:self.batch_size], mask_enc_1d[:self.batch_size], dst[:self.batch_size], mask_dec_1d[:self.batch_size])
 
-                        src = src[batch_size:]
-                        mask_enc_1d = mask_enc_1d[batch_size:]
-                        dst = dst[batch_size:]
-                        mask_dec_1d = mask_dec_1d[batch_size:]
-
-        self.key = key
+                        src = src[self.batch_size:]
+                        mask_enc_1d = mask_enc_1d[self.batch_size:]
+                        dst = dst[self.batch_size:]
+                        mask_dec_1d = mask_dec_1d[self.batch_size:]
