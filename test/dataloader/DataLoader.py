@@ -8,7 +8,7 @@ from lib.random.wrapper import seed2key
 if __name__ == '__main__':
     key = seed2key(42)
 
-    data_loader = DataLoader(dataset='dummy', key=key, batch_size=48, n_workers=32)
+    data_loader = DataLoader(dataset='dummy', key=key, batch_size_per_device=6, n_workers=32)
     for n_batches, batch in enumerate(data_loader):
         print(
             batch.src.shape,

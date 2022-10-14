@@ -12,3 +12,4 @@ __pycache__
 /2.py
 /3.py
 /external-ips.txt
+.nfs*
