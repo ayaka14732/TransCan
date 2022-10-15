@@ -36,7 +36,7 @@ python3.10 -m venv ./venv
 . ./venv/bin/activate
 pip install -U pip
 pip install -U wheel
-pip install "jax[tpu]==0.3.22" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
+pip install "jax[tpu]==0.3.23" -f https://storage.googleapis.com/jax-releases/libtpu_releases.html
 pip install -r requirements.txt
 ```
 

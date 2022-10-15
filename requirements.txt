@@ -3,7 +3,7 @@ tqdm
 wandb
 datasets~=2.3.2
 torch~=1.12.1
-jax==0.3.22
+jax==0.3.23
 jax-smi
 jaxtyping~=0.2.7
 flax~=0.6.1
@@ -13,4 +13,4 @@ numpyro~=0.10.1
 transformers~=4.21.2
 wikiextractor
 blingfire
-wakong~=1.0.0
+wakong~=1.1.0
