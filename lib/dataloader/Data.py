@@ -1,7 +1,7 @@
 from jaxtyping import Array, Bool as B, UInt16 as U16
 from typing import NamedTuple
 
-class Data(NamedTuple):
+class Data(NamedTuple):  # used by `prepare_data_for_model`
     src: U16[Array, 'n_local_devices bs//n_local_devices src_len']
     dst: U16[Array, 'n_local_devices bs//n_local_devices dst_len+1']
     mask_enc_1d: B[Array, 'n_local_devices bs//n_local_devices src_len']
