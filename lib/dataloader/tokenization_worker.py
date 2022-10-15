@@ -25,8 +25,8 @@ def tokenization_worker(x) -> np.ndarray:
 
     distorted_sentences = [distort_sentence(wakong, sentence) for sentence in sentences]
 
-    x = tokenizer(sentences, return_tensors='np', max_length=256, padding='max_length', truncation=True, add_prefix_space=True)
-    y = tokenizer(distorted_sentences, return_tensors='np', max_length=256, padding='max_length', truncation=True, add_prefix_space=True)
+    x = tokenizer(distorted_sentences, return_tensors='np', max_length=256, padding='max_length', truncation=True, add_prefix_space=True)
+    y = tokenizer(sentences, return_tensors='np', max_length=256-1, padding='max_length', truncation=True, add_prefix_space=True)
 
     src = x.input_ids.astype(np.uint16)
     mask_enc_1d = x.attention_mask.astype(np.bool_)
