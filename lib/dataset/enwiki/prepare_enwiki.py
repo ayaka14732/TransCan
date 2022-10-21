@@ -9,7 +9,7 @@ from ...utils.download_file import download_file
 from .preprocess_enwiki import preprocess_enwiki
 
 def preprocess_enwiki_outer(f_in: str) -> None:
-    dir_prefix, dump, dir_name, filename = f_in.rsplit('/', 3)
+    dir_prefix, dump, dir_name, filename = f_in.rsplit('/', 3)  # TODO: avoid '/'
     assert dump == 'dump'
     dir_out = join(dir_prefix, 'dump2', dir_name)
     try:

@@ -2,14 +2,17 @@ import os; os.environ['XLA_FLAGS'] = os.environ.get('XLA_FLAGS', '') + ' --xla_f
 import jax; jax.config.update('jax_platforms', 'cpu')
 from pathlib import Path; import sys; sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from lib.dataloader.DataLoader import DataLoader
+from lib.preprocessor.Preprocessor import Preprocessor
+from lib.dataset.dummy import load_dummy
 from lib.random.wrapper import seed2key
 
 if __name__ == '__main__':
     key = seed2key(42)
 
-    data_loader = DataLoader(dataset='dummy', key=key, batch_size_per_device=6, n_workers=32)
-    for n_batches, batch in enumerate(data_loader):
+    sentences = load_dummy()
+
+    preprocessor = Preprocessor(sentences, key=key, batch_size_per_device=6, n_workers=8)
+    for n_batches, batch in enumerate(preprocessor):
         print(
             batch.src.shape,
             batch.dst.shape,

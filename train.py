@@ -6,14 +6,15 @@ import optax
 import time
 import wandb
 
-from lib.dataloader.DataLoader import DataLoader
+from lib.dataset.enwiki import load_enwiki
 from lib.model.fwd_transformer import fwd_transformer
 from lib.param_utils.init_params import init_params
 from lib.param_utils.save_params import save_params
+from lib.preprocessor.Preprocessor import Preprocessor
 from lib.random.wrapper import seed2key, split_key
 from lib.training.cross_entropy_loss import cross_entropy_loss
 
-pad_token_id = 1  # BartTokenizer.from_pretrained('facebook/bart-base').pad_token_id
+pad_token_id = 1  # BartTokenizerWithoutOverflowEOS.from_pretrained('facebook/bart-base').pad_token_id
 optimizer = None
 
 @jax.jit
@@ -57,8 +58,10 @@ def main():
 
     key = seed2key(seed=42 + process_index)
 
+    sentences = load_enwiki(show_progress_bar=process_index == 0)
+
     key, subkey = split_key(key)
-    data_loader = DataLoader(dataset='enwiki', key=subkey, batch_size_per_device=batch_size_per_device, n_workers=50)
+    preprocessor = Preprocessor(sentences, key=subkey, batch_size_per_device=batch_size_per_device, n_workers=50)
 
     key, subkey = split_key(key)
     params = init_params(key=subkey)
@@ -70,11 +73,11 @@ def main():
     replicated_params = jax.device_put_replicated(params, local_devices)
     replicated_opt_state = jax.device_put_replicated(opt_state, local_devices)
 
-    for _ in range(n_epochs):
+    for epoch in range(n_epochs):
         if process_index == 0:
             epoch_loss = 0.
 
-        for n_batches, batch in enumerate(data_loader):
+        for step, batch in enumerate(preprocessor):
             if process_index == 0:
                 start_time = time.time()
 
@@ -93,6 +96,11 @@ def main():
             )
 
             if process_index == 0:
+                if step % 20000 == 0:
+                    params = jax.tree_map(lambda x: x[0], replicated_params)
+                    filename = f'{wandb.run.name}-{epoch}-{step}.dat'
+                    save_params(params, filename)
+
                 batch_loss = replicated_loss[0].item()
                 assert not np.isnan(batch_loss)
                 epoch_loss += batch_loss
@@ -102,11 +110,11 @@ def main():
                 wandb.log({'batch loss': batch_loss, 'time': elapsed_time})
 
         if process_index == 0:
-            epoch_loss /= n_batches
+            epoch_loss /= step
             wandb.log({'epoch loss': epoch_loss})
 
             params = jax.tree_map(lambda x: x[0], replicated_params)
-            filename = f'{wandb.run.name}.dat'
+            filename = f'{wandb.run.name}-{epoch}.dat'
             save_params(params, filename)
 
 if __name__ == '__main__':

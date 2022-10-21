@@ -1,12 +1,12 @@
 import jax
 import jax.numpy as np
-from transformers import BartTokenizer
 
-from lib.param_utils.load_params import load_params
+from lib.Generator import Generator
 from lib.model.fwd_embedding import fwd_embedding
 from lib.model.fwd_layer_norm import fwd_layer_norm
 from lib.model.fwd_transformer_encoder import fwd_transformer_encoder
-from lib.Generator import Generator
+from lib.param_utils.load_params import load_params
+from lib.tokeniser import BartTokenizerWithoutOverflowEOS
 
 def fwd_encode(params: dict, src: np.ndarray, mask_enc: np.ndarray) -> np.ndarray:
     # params
@@ -29,7 +29,7 @@ def fwd_encode(params: dict, src: np.ndarray, mask_enc: np.ndarray) -> np.ndarra
 
     return src
 
-tokenizer = BartTokenizer.from_pretrained('facebook/bart-base')
+tokenizer = BartTokenizerWithoutOverflowEOS.from_pretrained('facebook/bart-base')
 
 sentences = ['Can you see the beautiful flowers <mask> alongside the track?', 'Upon graduation, <mask> of herself.']
 batch = tokenizer(sentences, padding=True, return_tensors='jax')

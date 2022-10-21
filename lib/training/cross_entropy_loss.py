@@ -14,5 +14,4 @@ def cross_entropy_loss(
     loss *= mask_dec_1d
     check_type('loss', loss, F[Array, 'bs dst_len'])
 
-    loss *= 1024  # loss scaling
     return np.sum(loss)

@@ -13,4 +13,4 @@ numpyro~=0.10.1
 transformers~=4.21.2
 wikiextractor
 blingfire
-wakong~=1.1.0
+wakong~=1.1.1

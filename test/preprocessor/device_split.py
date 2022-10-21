@@ -4,7 +4,7 @@ from pathlib import Path; import sys; sys.path.append(str(Path(__file__).resolve
 
 import numpy as onp
 
-from lib.dataloader.device_split import device_split
+from lib.preprocessor.device_split import device_split
 
 if __name__ == '__main__':
     n_local_device = jax.local_device_count()

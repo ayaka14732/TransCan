@@ -67,6 +67,8 @@ TODO: Does Chinese BART have this issue?
 
 Related: <https://discuss.huggingface.co/t/bpe-tokenizers-and-spaces-before-words/475>
 
+TODO: Add more information of my customised class, `BartTokenizerWithoutOverflowEOS`.
+
 ## Notes on Implementation
 
 This section records the problems we encountered during my implementation of the BART model and the final solutions.
