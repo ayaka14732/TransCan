@@ -2,11 +2,11 @@ import jax; jax.config.update('jax_platforms', 'cpu'); jax.config.update('jax_de
 
 import jax.numpy as np
 from jaxtyping import Array, Float as F, jaxtyped
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 @jax.jit
 @jaxtyped
-@typechecker
+@typechecked
 @jax.jit  # simulate nested `jax.jit`
 def f(a: F[Array, 'a b c d e'], b: F[Array, 'b c e f g']) -> F[Array, 'a g d e f']:
     c = a + 1.

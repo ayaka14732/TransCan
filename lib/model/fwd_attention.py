@@ -1,10 +1,10 @@
 import jax.nn as nn
 import jax.numpy as np
 from jaxtyping import Array, Bool as B, Float as F, PyTree, jaxtyped
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 @jaxtyped
-@typechecker
+@typechecked
 def fwd_attention(
     params: PyTree,
     src: F[Array, 'bs src_len d_model'],

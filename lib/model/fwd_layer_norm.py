@@ -1,9 +1,9 @@
 import jax.numpy as np
 from jaxtyping import Array, Float as F, PyTree, jaxtyped
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 @jaxtyped
-@typechecker
+@typechecked
 def fwd_layer_norm(params: PyTree, x: F[Array, '*dims last_dim'], eps: float=1e-5) -> F[Array, '*dims last_dim']:
     # params
     scale: Array = params['scale']  # array

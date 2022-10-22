@@ -1,12 +1,12 @@
 from jaxtyping import Bool as B, UInt16 as U16, jaxtyped
 import numpy as onp
-from typeguard import typechecked as typechecker
+from typeguard import typechecked
 
 from .device_split import device_split
 from .Data import Data
 
 @jaxtyped
-@typechecker
+@typechecked
 def prepare_data_for_model(
     src: U16[onp.ndarray, 'bs src_len'],
     mask_enc_1d: B[onp.ndarray, 'bs src_len'], 

@@ -1,9 +1,9 @@
 import jax.numpy as np
 from jaxtyping import Array, Float as F, PyTree, jaxtyped
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 @jaxtyped
-@typechecker
+@typechecked
 def fwd_linear(params: PyTree, x: F[Array, '...']) -> F[Array, '...']:
     # params
     kernel: Array = params['kernel']  # array

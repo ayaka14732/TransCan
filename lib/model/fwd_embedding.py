@@ -1,8 +1,8 @@
 from jaxtyping import Array, Float as F, UInt16 as U16, PyTree, jaxtyped
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 @jaxtyped
-@typechecker
+@typechecked
 def fwd_embedding(params: PyTree, x: U16[Array, '*dims']) -> F[Array, '*dims embed_size']:
     # params
     embedding: Array = params['embedding']  # array

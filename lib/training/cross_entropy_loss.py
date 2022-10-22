@@ -1,10 +1,10 @@
 import jax.numpy as np
 from jaxtyping import Array, Bool as B, Float as F, UInt16 as U16, jaxtyped
 import optax
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 @jaxtyped
-@typechecker
+@typechecked
 def cross_entropy_loss(
     logits: F[Array, 'bs dst_len n_classes'],
     labels: U16[Array, 'bs dst_len'],

@@ -2,10 +2,10 @@ import jax; jax.config.update('jax_platforms', 'cpu'); jax.config.update('jax_de
 
 import jax.numpy as np
 from jaxtyping import Array, Float as F, jaxtyped
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 @jaxtyped
-@typechecker
+@typechecked
 def f1(a: F[Array, 'a b c d e'], b: F[Array, 'b c e f g']) -> F[Array, 'a g d e f']:
     c = a + 1.
     check_type('c', c, F[Array, 'a b c d e'])
@@ -16,7 +16,7 @@ def f1(a: F[Array, 'a b c d e'], b: F[Array, 'b c e f g']) -> F[Array, 'a g d e 
     return e
 
 @jaxtyped
-@typechecker
+@typechecked
 def f2(a: F[Array, 'a b c d e'], b: F[Array, 'b c e f g']) -> F[Array, 'a g d e f']:
     c = a + 1.
     check_type('c', c, F[Array, 'a b c d e'])

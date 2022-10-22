@@ -1,7 +1,7 @@
 import jax.nn as nn
 import jax.random as rand
 from jaxtyping import Array, Bool as B, Float as F, PyTree, jaxtyped
-from typeguard import check_type, typechecked as typechecker
+from typeguard import check_type, typechecked
 
 from .dropout import dropout
 from .fwd_layer_norm import fwd_layer_norm
@@ -10,7 +10,7 @@ from .fwd_attention import fwd_attention
 from ..random.wrapper import KeyArray
 
 @jaxtyped
-@typechecker
+@typechecked
 def fwd_transformer_decoder(
     params: PyTree,
     src: F[Array, 'bs src_len d_model'],

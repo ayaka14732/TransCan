@@ -1,7 +1,7 @@
 import jax; jax.config.update('jax_platforms', 'cpu')
-import jax.numpy as jnp
+import jax.numpy as np
 from jaxtyping import Array, Float as F, jaxtyped
-from typeguard import typechecked as typechecker
+from typeguard import typechecked
 from typing import NamedTuple
 
 class DataCorrect(NamedTuple):
@@ -13,19 +13,19 @@ class DataWrong(NamedTuple):
     y: F[Array, 'bs m+1']
 
 @jaxtyped
-@typechecker
+@typechecked
 def correct(a: F[Array, 'bs m']) -> DataCorrect:
     _, m = a.shape
     return DataCorrect(a[:, :m // 2], a[:, :m - 1])
 
 @jaxtyped
-@typechecker
+@typechecked
 def wrong(a: F[Array, 'bs m']) -> DataWrong:
     _, m = a.shape
     return DataWrong(a[:, :m // 2], a[:, :m - 1])
 
 def main():
-    a = jnp.zeros((2, 4))
+    a = np.zeros((2, 4))
     correct(a)  # no exception
 
     try:
