@@ -1,6 +1,6 @@
-import jax; jax.config.update('jax_platforms', 'cpu')  # TODO: enable tests
 from pathlib import Path; import sys; sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
+import jax
 import jax.numpy as np
 import sys
 
