@@ -6,7 +6,7 @@ import time
 import wandb
 
 from lib.dataset.enwiki import load_enwiki
-from lib.model.fwd_transformer import fwd_transformer
+from lib.model import fwd_transformer
 from lib.param_utils.init_params import init_params
 from lib.param_utils.save_params import save_params
 from lib.preprocessor.Preprocessor import Preprocessor

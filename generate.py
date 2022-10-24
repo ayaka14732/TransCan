@@ -2,9 +2,7 @@ import jax
 import jax.numpy as np
 
 from lib.Generator import Generator
-from lib.model.fwd_embedding import fwd_embedding
-from lib.model.fwd_layer_norm import fwd_layer_norm
-from lib.model.fwd_transformer_encoder import fwd_transformer_encoder
+from lib.model import fwd_embedding, fwd_layer_norm, fwd_transformer_encoder
 from lib.param_utils.load_params import load_params
 from lib.tokeniser import BartTokenizerWithoutOverflowEOS
 
