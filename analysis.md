@@ -1,4 +1,3 @@
-
 ## Analysis of the Model Architecture
 
 We analyse the inconsistency between the description of the BART model in the literature and the actual BART implementation.
@@ -139,11 +138,12 @@ This can cause sneaky bugs for bart-base, in which the _Q_, _K_, _V_ matrices ar
 
 ### Code quality
 
-TODO: Clean up
+`BartTokenizerWithoutOverflowEOS`:
 
-If train from scratch, always add `add_prefix_space=True` when initialise the tokenizer
+Changed two behaviours :
 
-not necessarily true! Cannot have, can cause sneaky bugs. Remember to check it before committing
+- `add_prefix_space=True`
+- without overflow EOS: [huggingface/transformers#19742](https://github.com/huggingface/transformers/issues/19742)
 
 ```
 rand.PRNGKey > random.wrapper.seed2key
@@ -151,3 +151,20 @@ rand.split > random.wrapper.split_key
 rand.KeyArray > lib.random.wrapper.KeyArray
 ...; del key
 ```
+
+### Best practices
+
+Git
+
+Create a new branch such as `tuning/learning_rate`, then commit
+
+- Change learning rate to xxx
+- Change learning rate to xxx
+- Change learning rate to xxx
+- Change learning rate to xxx
+
+After finding the best learning rate, squash and merge to the main branch.
+
+Also keep the old branch.
+
+If commit on main branch, and the behaviour is not changed (including the random seed), add `[chore] ` to the title.
