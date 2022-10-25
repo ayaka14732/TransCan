@@ -19,10 +19,10 @@ def prepare_data_for_model(
     labels = dst
 
     prepend_eos_for_dst = True
-    bos_id = 2
+    eos_id = 2
 
     if prepend_eos_for_dst:
-        arr_eos = onp.ones((batch_size, 1), dtype=onp.uint16) * bos_id
+        arr_eos = onp.ones((batch_size, 1), dtype=onp.uint16) * eos_id
         dst = onp.hstack((arr_eos, dst))
 
         arr_true = onp.ones((batch_size, 1), dtype=onp.bool_)
