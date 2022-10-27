@@ -10,6 +10,7 @@ datasets~=2.3.2
 torch~=1.12.1
 jax==0.3.23
 jax-smi
+tensorflow==2.11.0-rc1
 jaxtyping~=0.2.7
 flax~=0.6.1
 optax~=0.1.3
