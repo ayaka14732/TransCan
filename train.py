@@ -22,7 +22,7 @@ def train_forward(params, src, dst, mask_dec_1d, mask_enc, mask_dec, mask_dec_en
     outputs = fwd_transformer(params, src, dst, mask_enc, mask_dec, mask_dec_enc, dropout_key=dropout_key)
     lm_head = params['embedding']['embedding'].T
     logits = outputs @ lm_head
-    loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d) / len(labels)
+    loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d)
     return loss
 
 @functools.partial(jax.pmap, axis_name='n_devices')
@@ -42,7 +42,7 @@ def eval_step(params, src, dst, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, l
     outputs = fwd_transformer(params, src, dst, mask_enc, mask_dec, mask_dec_enc)
     lm_head = params['embedding']['embedding'].T
     logits = outputs @ lm_head
-    loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d) / len(labels)
+    loss = cross_entropy_loss(logits, labels, mask_dec_1d=mask_dec_1d)
     return loss
 
 def main():
@@ -70,8 +70,13 @@ def main():
 
     key = seed2key(seed=42 + process_index)
 
-    sentences_train = load_enwiki(show_progress_bar=process_index == 0)
-    sentences_eval = sentences_train[-6400:]  # TODO: split train/eval
+    from random import Random
+    rng = Random(42)
+    sentences = load_enwiki(show_progress_bar=process_index == 0)
+    rng.shuffle(sentences)
+    sentences_train = sentences[6400:]
+    sentences_eval = sentences[:6400]
+    del Random, rng, sentences
 
     key, subkey = split_key(key)
     preprocessor_train = Preprocessor(sentences_train, key=subkey, batch_size_per_device=batch_size_per_device_train, n_workers=16)
