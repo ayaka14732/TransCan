@@ -29,8 +29,8 @@ def train_forward(params, src, dst, mask_dec_1d, mask_enc, mask_dec, mask_dec_en
 def train_step(params, opt_state, src, dst, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, labels, dropout_key):
     loss, grads = train_forward(params, src, dst, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, labels, dropout_key=dropout_key)
 
-    grads = jax.lax.psum(grads, axis_name='n_devices')
-    loss = jax.lax.psum(loss, axis_name='n_devices')
+    grads = jax.lax.pmean(grads, axis_name='n_devices')
+    loss = jax.lax.pmean(loss, axis_name='n_devices')
 
     updates, opt_state = optimizer.update(grads, opt_state, params)
     params = optax.apply_updates(params, updates)

@@ -11,7 +11,5 @@ def cross_entropy_loss(
     mask_dec_1d: B[Array, 'bs dst_len'],
 ) -> F[Array, '']:
     loss = optax.softmax_cross_entropy_with_integer_labels(logits=logits, labels=labels)
-    loss *= mask_dec_1d
     check_type('loss', loss, F[Array, 'bs dst_len'])
-
-    return np.mean(loss)
+    return np.mean(loss, where=mask_dec_1d)
