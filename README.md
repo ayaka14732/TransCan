@@ -10,8 +10,8 @@ This research is supported by Cloud TPUs from Google's [TPU Research Cloud](http
 | Baidu Translate | 0.168 | [`results-baidu.txt`](results-baidu.txt) |
 | Bing Translate | 0.155 | [`results-bing.txt`](results-bing.txt) |
 
-- Source sentences: [ayaka14732/wordshk-parallel-corpus@v1:plus15/test.en.txt](https://github.com/ayaka14732/wordshk-parallel-corpus/blob/v1/plus15/test.en.txt)
-- References: [ayaka14732/wordshk-parallel-corpus@v1:plus15/test.yue.txt](https://github.com/ayaka14732/wordshk-parallel-corpus/blob/v1/plus15/test.yue.txt)
+- Source sentences: [`test.en.txt`](https://github.com/ayaka14732/wordshk-parallel-corpus/blob/v1/plus15/test.en.txt)
+- References: [`test.yue.txt`](https://github.com/ayaka14732/wordshk-parallel-corpus/blob/v1/plus15/test.yue.txt)
 
 ## Repositories
 
