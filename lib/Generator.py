@@ -24,10 +24,10 @@ have some issues.
 class Generator:
     def __init__(self, params: np.ndarray, config: BartConfig=BartConfig.from_pretrained('facebook/bart-base')):
         # params
-        embedding: dict = params['embedding']  # embedding
         decoder_embed_positions: np.ndarray = params['decoder_embed_positions']  # array
         decoder_embed_layer_norm: dict = params['decoder_embed_layer_norm']  # layer norm
         decoder_layers: list = params['decoder_layers']  # list of transformer encoder
+        lm_head: dict = params['lm_head']  # array
 
         # randomly initialize a Flax model
         model_flax = FlaxBartForConditionalGeneration(config=config)
@@ -38,7 +38,6 @@ class Generator:
         # set the decoder part of the model parameters to the given parameters
         params_jax = {
             **params_jax,
-            'embedding': embedding,
             'decoder_embed_positions': decoder_embed_positions,
             'decoder_embed_layer_norm': decoder_embed_layer_norm,
             'decoder_layers': decoder_layers,
@@ -52,6 +51,8 @@ class Generator:
         with tempfile.TemporaryDirectory() as tmpdirname:
             model_flax.save_pretrained(tmpdirname)
             model_pt = BartForConditionalGeneration.from_pretrained(tmpdirname, from_flax=True)
+
+        model_pt.lm_head.weight.data = torch.from_numpy(onp.asarray(lm_head.T))
 
         self.model = model_pt
 

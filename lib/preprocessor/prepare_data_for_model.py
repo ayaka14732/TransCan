@@ -18,12 +18,12 @@ def prepare_data_for_model(
 
     labels = dst
 
-    prepend_eos_for_dst = True
-    eos_id = 2
+    prepend_sep_for_dst = True
+    sep_id = 102
 
-    if prepend_eos_for_dst:
-        arr_eos = onp.ones((batch_size, 1), dtype=onp.uint16) * eos_id
-        dst = onp.hstack((arr_eos, dst))
+    if prepend_sep_for_dst:
+        arr_sep = onp.ones((batch_size, 1), dtype=onp.uint16) * sep_id
+        dst = onp.hstack((arr_sep, dst))
 
         arr_true = onp.ones((batch_size, 1), dtype=onp.bool_)
         mask_dec_1d = onp.hstack((arr_true, mask_dec_1d))
