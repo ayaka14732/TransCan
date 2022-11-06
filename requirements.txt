@@ -2,6 +2,7 @@ autopep8
 tqdm
 wandb
 gdown
+fire
 wikiextractor
 blingfire
 regex

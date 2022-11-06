@@ -49,8 +49,7 @@ class Preprocessor:
 
         ctx = multiprocessing.get_context('spawn')
         with ProcessPoolExecutorWithQueueSizeLimit(queue_size=self.queue_size, max_workers=self.n_workers, mp_context=ctx) as executor:
-            self.key, *subkeys = split_key(self.key, num=n_chunks)
-            results = executor.map(tokenization_worker, sentences_chunked, subkeys)
+            results = executor.map(tokenization_worker, sentences_chunked)
 
             src_ = None
             mask_enc_1d_ = None
