@@ -5,4 +5,5 @@ from .fwd_linear import fwd_linear
 from .fwd_attention import fwd_attention
 from .fwd_transformer_encoder import fwd_transformer_encoder
 from .fwd_transformer_decoder import fwd_transformer_decoder
+from .fwd_transformer_encoder_part import fwd_transformer_encoder_part
 from .fwd_transformer_merged import fwd_transformer_merged

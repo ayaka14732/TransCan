@@ -5,7 +5,7 @@ import sys
 
 from lib.Generator import Generator
 from lib.param_utils.load_params import load_params
-from lib.en_kfw_nmt.fwd_transformer_encoder_part import fwd_transformer_encoder_part
+from lib.model import fwd_transformer_encoder_part
 
 params = load_params(sys.argv[1])
 params = jax.tree_map(np.asarray, params)

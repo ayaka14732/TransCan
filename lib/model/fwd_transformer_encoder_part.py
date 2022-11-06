@@ -3,11 +3,11 @@ import jax.random as rand
 from jaxtyping import Array, Bool as B, Float as F, UInt16 as U16, PyTree, jaxtyped
 from typeguard import typechecked
 
-from ..model.dropout import dropout
-from ..model.fwd_layer_norm import fwd_layer_norm
-from ..model.fwd_linear import fwd_linear
-from ..model.fwd_embedding import fwd_embedding
-from ..model.fwd_transformer_encoder import fwd_transformer_encoder
+from .dropout import dropout
+from .fwd_layer_norm import fwd_layer_norm
+from .fwd_linear import fwd_linear
+from .fwd_embedding import fwd_embedding
+from .fwd_transformer_encoder import fwd_transformer_encoder
 from ..random.wrapper import KeyArray
 
 @jaxtyped
