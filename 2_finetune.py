@@ -1,4 +1,4 @@
-from lib.init_chip import init_four_chip; init_four_chip()
+# from lib.init_chip import init_four_chip; init_four_chip()
 import jax; jax.config.update('jax_default_matmul_precision', jax.lax.Precision.HIGHEST)
 
 import functools
@@ -48,8 +48,9 @@ def eval_tick(params, src, dst, mask_dec_1d, mask_enc, mask_dec, mask_dec_enc, l
 def main():
     # initialisation
 
+    jax.distributed.initialize()
     jax_smi.initialise_tracking()
-    jax.devices()
+    jax.devices()  # force TPU initialisation
     jax.config.update('jax_platforms', 'cpu')  # suppress TPU in subprocesses
     process_index = jax.process_index()
     if process_index == 0:
@@ -60,12 +61,12 @@ def main():
     local_devices = jax.local_devices()
     n_local_devices = jax.local_device_count()
 
-    n_epochs = 20
+    n_epochs = 8
 
-    batch_size_per_device_train = 8
-    batch_size_per_device_dev = 160
+    batch_size_per_device_train = 4
+    batch_size_per_device_dev = 80
 
-    key = seed2key(seed=3407 + process_index)
+    key = seed2key(seed=42 + process_index)
 
     sentences_train = load_cantonese(split='train')
     sentences_dev = load_cantonese(split='dev')
@@ -95,7 +96,7 @@ def main():
         if process_index == 0:
             total_loss_train = 0.
 
-        for tick_train, batch_train in enumerate(preprocessor_train):
+        for tick_train, batch_train in enumerate(preprocessor_train, 1):
             if process_index == 0:
                 start_time = time.time()
 
@@ -134,12 +135,14 @@ def main():
             save_params(params, filename + '.tmp')
             os.rename(filename + '.tmp', filename)
 
+        del batch_train
+
         # eval
 
         if process_index == 0:
             total_loss_eval = 0.
 
-        for tick_eval, batch_eval in enumerate(preprocessor_eval):
+        for tick_eval, batch_eval in enumerate(preprocessor_eval, 1):
             replicated_batch_loss_eval = eval_tick(
                 replicated_params,
                 batch_eval.src,
@@ -155,7 +158,9 @@ def main():
                 total_loss_eval += batch_loss_eval
 
         if process_index == 0:
-            wandb.log({'eval loss': total_loss_eval / tick_eval}, commit=False)
+            wandb.log({'eval loss': total_loss_eval / tick_eval, 'epoch': epoch}, commit=True)
+
+        del batch_eval
 
 if __name__ == '__main__':
     main()
