@@ -17,12 +17,12 @@ This research is supported by Cloud TPUs from Google's [TPU Research Cloud](http
 
 TransCan consists of multiple repositories:
 
-- [ayaka14732/lihkg-scraper](https://github.com/ayaka14732/lihkg-scraper)
-- [ayaka14732/wordshk-parallel-corpus](https://github.com/ayaka14732/wordshk-parallel-corpus)
-- [CanCLID/abc-cantonese-parallel-corpus](https://github.com/CanCLID/abc-cantonese-parallel-corpus)
-- [ayaka14732/bart-base-jax](https://github.com/ayaka14732/bart-base-jax): JAX implementation of the BART model. This is the base model for all experiments in this study. All modifications to the model architecture have been made on the basis of this repository.
-- [ayaka14732/bart-base-cantonese](https://github.com/ayaka14732/bart-base-cantonese)
-- [ayaka14732/TransCan](https://github.com/ayaka14732/TransCan)
+- [ayaka14732/lihkg-scraper](https://github.com/ayaka14732/lihkg-scraper): Scraper for the LIHKG forum to obtain the data for 2nd-stage pre-training
+- [ayaka14732/wordshk-parallel-corpus](https://github.com/ayaka14732/wordshk-parallel-corpus): Data for fine-tuning and evaluation
+- [CanCLID/abc-cantonese-parallel-corpus](https://github.com/CanCLID/abc-cantonese-parallel-corpus): Data for fine-tuning
+- [ayaka14732/bart-base-jax](https://github.com/ayaka14732/bart-base-jax): The base model for all experiments in this research
+- [ayaka14732/bart-base-cantonese](https://github.com/ayaka14732/bart-base-cantonese): Scripts for for 2nd-stage pre-training
+- [ayaka14732/TransCan](https://github.com/ayaka14732/TransCan): Scripts for fine-tuning and evaluation
 
 Model weights:
 
@@ -41,6 +41,24 @@ Training details on W&B:
 The TransCan model is based on the BART base model. It utilises two linear projection layers to connect the embedding and all but the last encoder layers in the English BART model with the embedding, the last encoder layer and all decoder layers of the Cantonese BART model.
 
 ![](demo/1.png)
+
+## Tokeniser
+
+Convert Simplified Chinese to Traditional Chinese on word-level.
+
+## Training
+
+### 2nd-Stage Pre-Training
+
+The model is initialised from the Chinese (Mandarin) BART model, with the embedding layer modified as the description above. It is trained on the LIHKG dataset, which consists of 172,937,863 sentences, and the average length of the sentence is 17.8 characters. Each sentence is padded or truncated to 64 tokens. I utilise the SGD optimiser with a learning rate of 0.03 and adaptive gradient clipping 0.1, and the batch size is 640. It is trained for 7 epochs and 61,440 steps. The training takes 44.0 hours on Google Cloud TPU v4-16.
+
+### 1st-Stage Fine-Tuning
+
+In each linear layer, the weights are randomly initialised using Lecun normal initialiser, while the biases are set to zeros.
+
+### 2nd-Stage Fine-Tuning
+
+The whole model is fine-tuned. I utilise the AdamW optimiser with a learning rate of 1e-5. Batch size is 32 and trained for 8 epochs.
 
 ## Steps to reproduce
 
