@@ -36,9 +36,15 @@ Training details on W&B:
 - 1st-stage fine-tuning: [`3nqi5cpl`](https://wandb.ai/ayaka/en-kfw-nmt/runs/3nqi5cpl)
 - 2nd-stage fine-tuning: [`2ix84gyx`](https://wandb.ai/ayaka/en-kfw-nmt-2nd-stage'/runs/2ix84gyx)
 
+## Model Architecture
+
+The TransCan model is based on the BART base model. It utilises two linear projection layers to connect the embedding and all but the last encoder layers in the English BART model with the embedding, the last encoder layer and all decoder layers of the Cantonese BART model.
+
+![](demo/1.png)
+
 ## Steps to reproduce
 
-The experiment is carried out on Google Cloud TPU v4-16, and the results can be reproduced on other Google Cloud TPU v4-16 hosts. Alternatively, the results can be reproduced on any setup with two hosts, each with four default devices (e.g. two hosts with 4 GPU devices on each host). These scripts can also be run on other environment settings. These scripts can also be run on other environment settings to produce similar results, but not exactly the same.
+The experiment is carried out on Google Cloud TPU v4-16, and the results can be reproduced on the same setups. Alternatively, the results can be reproduced on any setup with two hosts, each with four default devices (e.g. two hosts with 4 GPU devices on each host). These scripts can also be run on other environment setups to produce similar results, but the results would not be exactly the same.
 
 ```sh
 # Clone source code and datasets
