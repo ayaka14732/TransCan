@@ -9,7 +9,7 @@ This document is incomplete. It is still in its early stages and will be extensi
 ## Table of Contents
 
 * [Results](#results)
-* [Repositories](#repositories)
+* [Introductions](#introductions)
 * [Definitions](#definitions)
 * [Overview](#overview)
 * [Pre-Training](#pre-training)
@@ -20,8 +20,9 @@ This document is incomplete. It is still in its early stages and will be extensi
     * [Architectural Modifications](#architectural-modifications)
     * [1st-Stage Fine-Tuning](#1st-stage-fine-tuning)
     * [2nd-Stage Fine-Tuning](#2nd-stage-fine-tuning)
-* [Steps to reproduce](#steps-to-reproduce)
 * [Appendix A: The Wakong Algorithm](#appendix-a-the-wakong-algorithm)
+* [Source Code: Repositories](#source-code-repositories)
+* [Source Code: Steps to reproduce](#source-code-steps-to-reproduce)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
 
@@ -80,7 +81,7 @@ Current status of Cantonese (i.e. why Cantonese is a low resource language)
 
 Cantonese-specific Chinese characters
 
-## Overview
+## System Overview
 
 The model for machine translation is produced in two steps: pre-training and fine-tuning.
 
@@ -325,7 +326,7 @@ Training details on W&B:
 - 1st-stage fine-tuning: [`3nqi5cpl`](https://wandb.ai/ayaka/en-kfw-nmt/runs/3nqi5cpl)
 - 2nd-stage fine-tuning: [`2ix84gyx`](https://wandb.ai/ayaka/en-kfw-nmt-2nd-stage'/runs/2ix84gyx)
 
-## Source Code: Steps to reproduce
+## Source Code: Steps to Reproduce
 
 The experiment is conducted on Google Cloud TPU v4-16, and the results can be reproduced with the same setup. Alternatively, the results can be reproduced on any setup with two hosts, each with four default devices (e.g. two hosts with 4 GPU devices on each host). These scripts can also be easily modified to run on other environment setups to produce similar results, but the results would not be exactly the same.
 
