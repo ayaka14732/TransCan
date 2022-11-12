@@ -1,6 +1,6 @@
 # TransCan: A Novel Approach to English-Cantonese Machine Translation
 
-**Abstract:** In this paper, I propose TransCan, a novel BART-based approach to English-Cantonese machine translation. Cantonese is a low-resource language with limited English-Cantonese parallel data, which makes the English-Cantonese translation a challenging task. However, Cantonese is grammatically similar to the high-resource Mandarin Chinese language and has a relatively large amount of monolingual data. To exploit these two features of Cantonese, I first perform a second-stage pre-training of the Chinese BART model on a monolingual Cantonese corpus to obtain a Cantonese BART model. Consequently, I devised a simple yet novel model architecture, linking the beginning part of the English BART model and the end part of the Cantonese BART model with two simple linear projection layers, and fine-tuned the model on a small English-Cantonese parallel corpus. The resulting model outperformed the state-of-the-art commercial machine translation product by 11.8 BLEU. The source code is publicly available on GitHub.
+**Abstract:** In this paper, I propose TransCan, a novel BART-based approach to English-Cantonese machine translation. Cantonese is a low-resource language with limited English-Cantonese parallel data, which makes the English-Cantonese translation a challenging task. However, Cantonese is grammatically similar to the high-resource Mandarin Chinese language and has a relatively large amount of monolingual data. To exploit these two features of Cantonese, I first perform a second-stage pre-training of the Chinese BART model on a monolingual Cantonese corpus to obtain a Cantonese BART model. Consequently, I devised a simple yet novel model architecture, linking the beginning part of the English BART model and the end part of the Cantonese BART model with two simple linear projection layers, and fine-tuned the model on a small English-Cantonese parallel corpus. The resulting model outperformed the state-of-the-art commercial machine translation product by 11.8 BLEU, and my baseline model by 7.2 BLEU. The source code is publicly available on GitHub.
 
 This research is supported by Cloud TPUs from Google's [TPU Research Cloud](https://sites.research.google/trc/about/) (TRC).
 
@@ -30,7 +30,8 @@ This document is incomplete. It is still in its early stages and will be extensi
 
 | Model | BLEU | File |
 | :- | :-: | :- |
-| **This Model** | **28.6** | [`results-bart.txt`](results-bart.txt) |
+| **TransCan** | **28.6** | [`results-bart.txt`](results-bart.txt) |
+| Baseline | 21.4 | [`results-baseline.txt`](results-baseline.txt) |
 | Baidu Translate | 16.8 | [`results-baidu.txt`](results-baidu.txt) |
 | Bing Translate | 15.5 | [`results-bing.txt`](results-bing.txt) |
 
