@@ -1,30 +1,6 @@
-# TransCan: A Novel Approach to English-Cantonese Machine Translation
+# TransCan: A English-to-Cantonese Machine Translation Model
 
-**Abstract:** In this paper, I propose TransCan, a novel BART-based approach to English-Cantonese machine translation. Cantonese is a low-resource language with limited English-Cantonese parallel data, which makes the English-Cantonese translation a challenging task. However, Cantonese is grammatically similar to the high-resource Mandarin Chinese language and has a relatively large amount of monolingual data. To exploit these two features of Cantonese, I first perform a second-stage pre-training of the Chinese BART model on a monolingual Cantonese corpus to obtain a Cantonese BART model. Consequently, I devised a simple yet novel model architecture, linking the beginning part of the English BART model and the end part of the Cantonese BART model with two simple linear projection layers, and fine-tuned the model on a small English-Cantonese parallel corpus. The resulting model outperformed the state-of-the-art commercial machine translation product by 11.8 BLEU, and my baseline model by 7.2 BLEU. The source code is publicly available on GitHub.
-
-This research is supported by Cloud TPUs from Google's [TPU Research Cloud](https://sites.research.google/trc/about/) (TRC).
-
-This document is incomplete. It is still in its early stages and will be extensively revised in the next few days.
-
-## Table of Contents
-
-* [Results](#results)
-* [Introductions](#introductions)
-* [Definitions](#definitions)
-* [Overview](#overview)
-* [Pre-Training](#pre-training)
-    * [1st-Stage Pre-Training](#1st-stage-pre-training)
-    * [Embedding Conversion](#embedding-conversion)
-    * [2nd-Stage Pre-Training](#2nd-stage-pre-training)
-* [Fine-Tuning](#fine-tuning)
-    * [Architectural Modifications](#architectural-modifications)
-    * [1st-Stage Fine-Tuning](#1st-stage-fine-tuning)
-    * [2nd-Stage Fine-Tuning](#2nd-stage-fine-tuning)
-* [Appendix A: The Wakong Algorithm](#appendix-a-the-wakong-algorithm)
-* [Source Code: Repositories](#source-code-repositories)
-* [Source Code: Steps to reproduce](#source-code-steps-to-reproduce)
-
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+This project is supported by Cloud TPUs from Google's [TPU Research Cloud](https://sites.research.google/trc/about/) (TRC).
 
 ## Results
 
@@ -38,49 +14,58 @@ This document is incomplete. It is still in its early stages and will be extensi
 - Source sentences: [`test.en.txt`](https://github.com/ayaka14732/wordshk-parallel-corpus/blob/v1/plus15/test.en.txt)
 - References: [`test.yue.txt`](https://github.com/ayaka14732/wordshk-parallel-corpus/blob/v1/plus15/test.yue.txt)
 
-## Introductions
+## Motivation
 
-Popularity
+### Current State of English-to-Cantonese Machine Translation
 
-Existing systems:
+Cantonese is a language spoken by 85.6 million people worldwide. Both [Baidu Translate](https://fanyi.baidu.com/) and [Bing Translate](https://www.bing.com/translator) have launched their English-to-Cantonese commercial machine translation services. However, the results produced by these two translators are not satisfactory. Although being closed-source and there is no way to view their internal architecture, it is clear that both translators first translate Cantonese into Mandarin, and then utilise a rule-based system to translate Mandarin into Cantonese, by simply taking a look at the translation results:
 
-1. Commercial machine translation products: The architecture of the system is not known, but it can be demonstrated that it uses Mandarin as an intermediary and makes extensive use of rule-based methods. Such a system is inaccurate and error-prone, and cannot fully translate Mandarin sentences into Cantonese, which usually results in an incongruous mixture of Mandarin and Cantonese that is offensive to Cantonese speakers;
-1. Existing approaches for low-resource language translation: Cannot exploit the two features that Cantonese is grammatically closer to the high-resource Mandarin Chinese language and has a relatively large amount of monolingual data.
+**Example 1**
 
-In view of the large market demand for English-Cantonese translations, this study establishes a new baseline system and calls for future researchers to further push the boundary of the research in this field.
+- Source: The motor has a broken piston. Let's get a repairman to fix it.
+- Reference: 個摩打有條活塞爆咗，揾個師傅嚟整整佢。
+- Bing Translate (Mandarin): 電機的活塞損壞。讓我們找一個修理工來修理它。
+- Bing Translate (Cantonese): 電機嘅活塞損壞。讓我們找一個修理工來修理它。
 
-My main contributions are as follows:
+In the above example, Bing Translate correctly translated the Mandarin word 的 (*de*, possessive marker) to the Cantonese word 嘅 (*ge3*), but failed to translate the Mandarin word 找 (*zhǎo*, 'find') to Cantonese 揾 (*wan3*) and Mandarin 它 (*tā*, 'it') to Cantonese 佢 (*keoi5*).
 
-1. I propose a novel approach to English-Cantonese machine translation that highly outperforms existing systems;
-1. For English-Cantonese machine translation systems, I proposed the first English-Cantonese machine translation dataset to evaluate their performance;
-1. For low-resource languages with relatively large mono-lingual data, I proposed a method to perform a second-stage pre-training to utilise the pre-trained models for a similar high-resource language;
-1. For low-resource machine translation, I proposed a novel model architecture and fine-tuning method that utilise two monolingual pre-trained models and a small amount of parallel training data to obtain a high performance;
-1. For Chinese NLP tasks, I proposed a method to convert a model trained on a Simplified Chinese dataset to a Traditional Chinese model without any training involved;
-1. For the pre-training of large language models, I proposed a mathematically rigorous masking algorithm to generate the training objective.
+**Example 2**
 
-## Definitions
+- Source: He has a husky, magnetic voice.
+- Reference: 佢把聲沙沙哋、沉沉哋，好有磁性。
+- Baidu Translate (Mandarin): 他声音沙哑，富有磁性。
+- Baidu Translate (Cantonese): 佢把声沙，有钱磁性。
 
-Chinese:
+In the above example, Baidu Translate unexpectedly produced a sentence containing the word 有钱 (*jau5 cin2*, 'rich'), which does not exist in the source sentence. This is because the system translated the word 'magnetic' as 富有磁性 (*fùyǒu cíxìng*, 'full of magnetism'), while the word 富有 (*fùyǒu*) has another meaning of 'rich' in Mandarin.
 
-Chinese Character:
+**Example 3**
 
-Simplified Chinese:
+- Source: A sugar cube is about the same amount as a teaspoon.
+- Reference: 一粒方糖差唔多係一茶匙糖咁滯。
+- Baidu Translate (Mandarin): 一块方糖的量大约等于一茶匙。
+- Baidu Translate (Cantonese): 一蚊方糖嘅量大约等于一茶匙。
 
-Traditional Chinese:
+In the above example, Baidu Translate unexpectedly chose the wrong quantifier 蚊 (*man1*) instead of 粒 (*nap1*) to describe a sugar cube. This is because, in the Mandarin translation, the correct quantifier 块 (*kuài*) is used, but the quantifier 块 (*kuài*) corresponds to both 蚊 (*man1*, for money) and 粒 (*nap1*, for sugar cube) in Cantonese.
 
-Differences in habits of using Chinese characters in different regions
+All the examples above demonstrate that existing commercial English-to-Cantonese machine translation systems produce unsatisfactory results, and even in some cases, the system cannot fully translate Mandarin into Cantonese, resulting in some words being translated into Cantonese and some words remaining in Mandarin, producing an incongruous hybrid of Mandarin and Cantonese. Such a result is offensive to Cantonese speakers and confusing to other users. Therefore, there is an urgent need to improve machine translation from English to Cantonese.
 
-Conversion of SC/TC: StarCC
+### Current State of Neural Machine Translation
 
-Mandarin:
+Currently, the most advanced approach to machine translation is neural machine translation, in which Transformer-based models are the most widely adopted model architecture. To train such a model, researchers need to prepare a bilingual parallel corpus from the source language to the target language. As the training objective, the model takes a sentence in the source language as input and outputs the corresponding sentence in the target language.
 
-Cantonese:
+However, this common approach is not suitable for Cantonese machine translation. Due to its special writing tradition, which will be discussed below, Cantonese is a low-resource language with only a relatively small English-Cantonese parallel corpus. If a Transformer-based model is trained from scratch on a small corpus, the model will not be fully trained and thus unable to produce meaningful translation results.
 
-Written Cantonese:
+One solution to this problem is to exploit an English-to-Mandarin machine translation model. As Cantonese is grammatically similar to Mandarin, which is a high-resource language, the knowledge of Mandarin in an English-to-Mandarin machine translation model would be able to be transferred to Cantonese by fine-tuning the model on a small English-Cantonese parallel dataset. This approach makes the neural machine translation from English to Cantonese feasible. In this research, a model is fine-tuned in this way as a baseline.
 
-Current status of Cantonese (i.e. why Cantonese is a low resource language)
+However, unlike other low-resource languages, Cantonese is fortunate because it has a relatively large amount of monolingual data. The above approach can only exploit a small bilingual parallel English-Cantonese corpus, while the large monolingual corpus cannot be utilised. This calls for a new approach to be devised to make use of monolingual data.
 
-Cantonese-specific Chinese characters
+## My Contributions
+
+- I proposed a novel approach to English-Cantonese machine translation that highly outperforms existing systems;
+- For English-to-Cantonese machine translation systems, I proposed the first English-Cantonese machine translation dataset to evaluate their performance;
+- For low-resource languages with relatively large mono-lingual data and a pre-trained model for a similar high-resource language, I proposed a novel method to perform a second-stage pre-training to utilise the data and the pre-trained model;
+- For low-resource machine translation, I proposed a novel model architecture and fine-tuning method that utilise two monolingual pre-trained models and a small amount of parallel training data to achieve high performance;
+- For Chinese NLP tasks, I proposed a method to convert a model trained on a Simplified Chinese dataset to a Traditional Chinese model without any training involved.
 
 ## System Overview
 
@@ -162,145 +147,6 @@ The TransCan model is based on the BART base model. The first part of the model 
 (TODO) Add more details
 
 **Training details:** The whole model is fine-tuned. I utilise the AdamW optimiser with a learning rate of 1e-5. Batch size is 32 and trained for 8 epochs.
-
-## Appendix A: The Wakong Algorithm
-
-1\. Constants
-
-```math
-\mathsf{proposedMaskRate} = 0.188
-```
-
-```math
-\mathsf{poissonRate} = 4.2
-```
-
-```math
-\mathsf{maxSpanLen} = 10
-```
-
-2\. `probsList`
-
-```math
-\mathsf{probsList} = \left[ \mathrm{normalise} \left(  \mathsf{probs} \left[ {:}\,i \right] \right) \mathrm{for} \; i \; \mathrm{in} \left[2, \; .. , \; \mathsf{maxSpanLen} + 1 \right] \right]
-```
-
-```math
-\mathsf{probs} = \left[ \Pr(X=i) \; \mathrm{for} \; i \; \mathrm{in} \left[ 0, \; .., \; \mathsf{maxSpanLen} + 1 \right] \right]
-```
-
-```math
-X \sim \mathrm{Pois}(\mathsf{poissonRate})
-```
-
-3\. `determineShouldMaskLen`
-
-```math
-\mathsf{determineShouldMaskLen} \left( \mathsf{seqLen} \right) =
-\begin{cases}
-    \lceil x \rceil, & \text{if} \; \omega < p \\
-    \lfloor x \rfloor, & \text{otherwise}
-\end{cases}
-```
-
-```math
-\omega \sim \mathrm{U} \left( 0, 1 \right)
-```
-
-```math
-x = \mathsf{seqLen} * \mathsf{proposedMaskRate}
-```
-
-```math
-p = x - \lfloor x \rfloor
-```
-
-4\. `generateSpans`
-
-```math
-\mathsf{generateSpans} \left( m \right) = \mathrm{shuffle} \left( \mathrm{anamorphism} \left( f \right) \left( m \right) \right)
-```
-
-```math
-f \left( \mathsf{remainedLen} \right) =
-\begin{cases}
-    \mathrm{Nothing}, & \text{if} \; \mathsf{remainedLen} \leq 0 \\
-    \left( \mathsf{span}, \; \mathrm{Just} \left( \mathsf{remainedLen} - \mathsf{span} - 1 \right) \right), & \text{otherwise}
-\end{cases}
-```
-
-```math
-\mathsf{span} \sim \mathrm{Categorical} \left( [0, \; .., \; n + 1], \; \mathsf{probsList} \left[ n - 1 \right] \right)
-```
-
-```math
-n = \min \left( \mathsf{maxSpanLen}, \; \mathsf{remainedLen} \right)
-```
-
-5\. `distributeInsertPoses`
-
-```math
-\mathsf{distributeInsertPoses} \left( \mathsf{xs} \right) = f \left( \mathsf{xs}, \; 0 \right)
-```
-
-```math
-f \left( n, \; \mathsf{xs} \right) =
-\begin{cases}
-    \mathsf{\left[ \, \right]}, & \text{if} \; \mathrm{empty} \left( \mathsf{xs} \right) \\
-    \left[ \left( p + n, \; s \right) \right] + f \left(n + s + 1, \; \mathsf{ys} \right), & \text{otherwise}
-\end{cases}
-```
-
-```math
-\left[ \left( p, s \right) \right] + \mathsf{ys} \leftarrow \mathsf{xs}
-```
-
-6\. `randomAddOne`
-
-```math
-\mathsf{randomAddOne} \left( \mathsf{xs} \right) = \begin{cases}
-    \mathsf{xs}, & \text{if} \; \omega < 0.5 \\
-    \left[ (p + 1, s) \; \mathrm{for} \; (p, s) \; \mathrm{in} \; \mathsf{xs} \right], & \text{otherwise}
-\end{cases}
-```
-
-```math
-\omega \sim \mathrm{U} \left( 0, 1 \right)
-```
-
-7\. `wakong`
-
-```math
-\mathsf{wakong} \left( \mathsf{seqLen} \right) = \mathsf{randomAddOne} \left( \mathsf{distributeInsertPoses} \left( \mathrm{zip} \left( \mathsf{absInsertPoses}, \; \mathsf{spans} \right) \right) \right)
-```
-
-```math
-\mathsf{absInsertPoses} = \mathrm{sort} \left( X \right)
-```
-
-```math
-X = X_{1, \; .., \; \mathsf{nSpans}} \sim \mathrm{DiscreteUniform} \left[ 0, \; \mathsf{nPossibleInsertPoses} - 1 \right]
-```
-
-```math
-\left( \forall \; i, j \in \left\{ 1, \; .., \; \mathsf{nSpans} \right\}, X_i \ne X_j \right)
-```
-
-```math
-\mathsf{nPossibleInsertPoses} = \mathsf{seqLen} - \mathrm{sum} \left( \mathsf{spans} \right) - \mathsf{nSpans} + 1
-```
-
-```math
-\mathsf{nSpans} = \mathrm{len} \left( \mathsf{spans} \right)
-```
-
-```math
-\mathsf{spans} = \mathsf{generateSpans} \left( \mathsf{shouldMaskLen} \right)
-```
-
-```math
-\mathsf{shouldMaskLen} = \mathsf{determineShouldMaskLen} \left( \mathsf{seqLen} \right)
-```
 
 ## Source Code: Repositories
 
