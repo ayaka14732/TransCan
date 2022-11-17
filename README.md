@@ -61,104 +61,114 @@ However, unlike other low-resource languages, Cantonese is fortunate because it 
 
 ## My Contributions
 
-- I proposed a novel approach to English-Cantonese machine translation that highly outperforms existing systems;
-- For English-to-Cantonese machine translation systems, I proposed the first English-Cantonese machine translation dataset to evaluate their performance;
-- For low-resource languages with relatively large mono-lingual data and a pre-trained model for a similar high-resource language, I proposed a novel method to perform a second-stage pre-training to utilise the data and the pre-trained model;
-- For low-resource machine translation, I proposed a novel model architecture and fine-tuning method that utilise two monolingual pre-trained models and a small amount of parallel training data to achieve high performance;
-- For Chinese NLP tasks, I proposed a method to convert a model trained on a Simplified Chinese dataset to a Traditional Chinese model without any training involved.
+1. I proposed a novel approach to English-Cantonese machine translation that highly outperforms existing systems;
+1. For English-to-Cantonese machine translation systems, I proposed the first English-Cantonese machine translation dataset to evaluate their performance;
+1. For low-resource languages with relatively large mono-lingual data and a pre-trained model for a similar high-resource language, I proposed a novel method to perform a second-stage pre-training to utilise the data and the pre-trained model;
+1. For low-resource machine translation, I proposed a novel model architecture and fine-tuning method that utilise two monolingual pre-trained models and a small amount of parallel training data to achieve high performance;
+1. For Chinese NLP tasks, I proposed a method to convert a model trained on a Simplified Chinese dataset to a Traditional Chinese model without any training involved.
 
-## System Overview
+## Dataset
+
+### LIHKG Dataset
+
+The [LIHKG dataset](https://github.com/ayaka14732/lihkg-scraper) (denoted by **LIHKG**) is a monolingual Cantonese dataset. The dataset consists of 172,937,863 unique sentences and the average length of the sentences is 17.8 characters.
+
+### ABC Cantonese Parallel Corpus
+
+The [ABC Cantonese Parallel Corpus](https://github.com/CanCLID/abc-cantonese-parallel-corpus) (denoted by **ABC**) is extracted from the *ABC Cantonese-English Comprehensive Dictionary*. The corpus provides 14,474 high-quality Cantonese-English parallel sentences, which is valuable for developing Cantonese-English translation systems.
+
+### Words.hk Cantonese-English Parallel Corpus
+
+The [Words.hk Cantonese-English Parallel Corpus](https://github.com/CanCLID/wordshk-parallel-corpus.git) is extracted from *Words.hk*, a crowdsourced, sustainably developed, web-based Cantonese dictionary for native speakers and beginners of Cantonese. The dictionary is dedicated to providing complete Cantonese-English bilingual explanations and illustrative examples.
+
+After extracting the parallel data, I split the data into two datasets, according to whether the Cantonese sentences in the Cantonese-English sentence pairs were greater than or equal to 15 characters. The dataset with lengths less than 15 characters are denoted by **Minus15** (29487 pairs of sentences), while the dataset with lengths greater than 15 is denoted by **Plus15** (12372 pairs of sentences).
+
+For the **Plus15** dataset, I further split it into three divisions: train (9372 sentences), dev (1500 sentences) and test (1500 sentences).
+
+I split the *Words.hk* corpus into **Minus15** and **Plus15** according to the length because short sentences are not good metrics for evaluating the performance of machine translation systems. Firstly, short sentences contain less information, so the translation result may not reflect the true ability of a machine translation system. Secondly, BLEU is defined as the geometric mean of _n_-gram precisions (usually for _n_ from 1 to 4), and a brevity penalty to prevent short sentences from receiving unfairly high evaluation scores. For short sentences, the chance of having a matching 4-gram is relatively low, so the reported BLEU scores will be very low and will not be a good indicator of performance. Therefore, it is a better choice to employ long sentences in the eval and test phases of the model training. Separating long sentences from short sentences makes the logic of the subsequent processing clearer.
+
+### Utilisation of the Datasets
+
+In this research, the monolingual **LIHKG** dataset is utilised for the second-stage pre-training of the Cantonese BART model. The combination of the **ABC** dataset, the **Minus15** dataset and the train division of the **Plus15** dataset (denoted by **Train**) is utilised for both the first stage and the second stage of the fine-tuning.
+
+## Model
+
+### Baseline Model
+
+For the baseline model, I fine-tuned the OPUS-MT en-zh model in the **Train** dataset. OPUS-MT is a project dedicated to providing open translation services and tools that are free from commercial interests and restrictions.
+
+Although the OPUS-MT en-zh model is said to be trained on a large amount of parallel data from English to many Sinitic languages, including Jin, Mandarin, Gan, Classical Chinese, Hokkien, Wu and Cantonese, the actual content of the dataset is Mandarin-dominant. This means that the model will not be able to obtain a complete knowledge of other Sinitic languages during the pre-training phase. Fortunately, the tokeniser of the model contains enough Cantonese-specific characters such as 噉 (*gam2*), 佢 (*keoi5*) and 咗 (*zo2*), which means that the model is ready to be fine-tuned on the Cantonese dataset without any modification of the embedding.
+
+### My Model
 
 The model for machine translation is produced in two steps: pre-training and fine-tuning.
 
-1. Pre-training
-    1. **1st-stage pre-training**: Pre-train a Mandarin (simplified Chinese) model _(already been done in [fnlp/bart-base-chinese](https://huggingface.co/fnlp/bart-base-chinese))_
-    1. **Embedding conversion**: Convert the embedding to traditional Chinese and add Cantonese vocabulary
-    1. **2nd-stage pre-training**: Pre-train the model to fit Cantonese (traditional Chinese) data
-2. Fine-tuning
-    1. **Architecture modification**: Take the beginning part of the English BART model and the end part of the Cantonese BART model and connect them with two newly-initialised linear projection layers
-    1. **1st-stage fine-tuning**: Fine-tune the two newly-initialised linear projection layers
-    1. **2nd-stage fine-tuning**: Fine-tune the whole model
+Pre-training:
 
-## Pre-Training
+- 1st-stage pre-training: Pre-train a Mandarin (simplified Chinese) model (already been done in fnlp/bart-base-chinese);
+- Embedding conversion: Convert the embedding to traditional Chinese and add Cantonese vocabulary (see [ayaka14732/bert-tokenizer-cantonese](https://github.com/ayaka14732/bert-tokenizer-cantonese));
+- 2nd-stage pre-training: Pre-train the model to fit Cantonese (traditional Chinese) data.
 
-![](demo/2.png)
+Fine-tuning:
 
-TODO: add explanation
-
-Cantonese is grammatically close to Mandarin, and has a relatively large amount of monolingual data. Therefore, it was natural to think that one can pre-train a Mandarin model in the first stage and then further pre-train the model in the second stage to obtain a Cantonese model.
-
-Translation of the above sentences:
-
-- 包括大不列颠岛北部以及**周围**的数个群岛 (meaning: including the northern part of the island of Great Britain and several **surrounding** archipelagos)
-- **周圍**嘅朋友都當佢哋係一對 (meaning: All the friends **around me** think they are a couple)
-- 佢感冒但係又唔戴口罩**周圍**行 (meaning: He has the flu, but he walks **around** without a mask)
-
-### 1st-Stage Pre-Training
-
-A pre-trained Mandarin BART model has already been proposed in [fnlp/bart-base-chinese](https://huggingface.co/fnlp/bart-base-chinese). Therefore, I have to decide whether to use the pre-trained BART model proposed in that paper or to pre-train a Mandarin BART model from scratch.
-
-There are advantages and disadvantages to both approaches. If I train the BART model from scratch, I can make the necessary modifications to the pre-training data and tokeniser to prepare for the second-stage pre-training. For example, I can use StarCC to convert the pre-training data to traditional Chinese and add Cantonese-specific Chinese characters to the tokeniser in advance. If I utilise the existing BART model, I have to make direct modifications to the embedding, which will be more challenging. However, this would save pre-training resources.
-
-In response to the call for environmental research, and to demonstrate the feasibility of converting a simplified Chinese model to a traditional Chinese model by modifying the embedding, I decided to use the existing pre-trained Mandarin BART model.
-
-### Embedding Conversion
-
-<!-- 首先，tokeniser是在简体中文上训练的，不适合繁体中文文本，因此我需要將tokeniser vocabulary中的簡體字轉為繁體。其次，一些字符只在粵語中使用，需要在tokeniser中添加這些字符。 -->
-
-**Tokeniser:** Convert Simplified Chinese to Traditional Chinese on a word-level.
-
-1. Convert the tokens of the original tokeniser from Simplified Chinese to Traditional Chinese, while keeping the corresponding embeddings fixed
-1. Given Cantonese datasets, calculate how many Cantonese-specific characters are missing in the original tokenizer, and add them to the vocabulary
-1. Randomly initialise new embeddings for new tokens
-
-(TODO) Elaborate according to [ayaka14732/bert-tokenizer-cantonese](https://github.com/ayaka14732/bert-tokenizer-cantonese).
-
-### 2nd-Stage Pre-Training
-
-**Dataset:** The model is trained on the LIHKG dataset, which consists of 172,937,863 sentences. The average length of the sentence is 17.8 characters. Each sentence is padded or truncated to 64 tokens.
-
-**Pre-training objective**
-
-I adopted the text-infilling objective described in the original BART paper. As the original description is unclear, I propose a robust text-infilling algorithm as follows: Wakong (TODO) (Appendix A)
-
-**Initialisation**: The model is initialised from the Chinese (Mandarin) BART model, with the embedding layer modified as the description above. Extra tokens are randomly initialised. Using weight tying.
-
-**Training details:** I utilise the SGD optimiser with a learning rate of 0.03 and adaptive gradient clipping 0.1, and the batch size is 640. It is trained for 7 epochs and 61,440 steps. The training takes 44.0 hours on Google Cloud TPU v4-16.
-
-## Fine-Tuning
-
-### Architectural Modifications
+- Architecture modification: Take the beginning part of the English BART model and the end part of the Cantonese BART model and connect them with two newly-initialised linear projection layers;
+- 1st-stage fine-tuning: Fine-tune the two newly-initialised linear projection layers;
+- 2nd-stage fine-tuning: Fine-tune the whole model.
 
 ![](demo/1.png)
 
-The TransCan model is based on the BART base model. The first part of the model is the encoder embedding and all but the last layers of the encoder, which are initialised from the English BART model. The second part of the model is the decoder embedding, the last encoder layer and all layers of the decoder, which are initialised from the Cantonese BART model. Two linear projection layers are inserted between the two parts of the model.
+![](demo/2.png)
 
-### 1st-Stage Fine-Tuning
+The TransCan model is based on the BART base model. The first part of the
+model is the encoder embedding and all but the last layers of the
+encoder, which are initialised from the English BART model. The second
+part of the model is the decoder embedding, the last encoder layer and
+all layers of the decoder, which are initialised from the Cantonese BART
+model. Two linear projection layers are inserted between the two parts
+of the model.
 
-(TODO) Add more details
+## Training
 
-**Initialisation**: In each linear layer, the weights are randomly initialised using Lecun normal initialiser, while the biases are set to zeros.
+### Baseline Model
 
-**Training details:** Only train the two linear projection layers and fix the other parts. The intuition is that ...
+The baseline model is the Marian model fine-tuned on the **Train** dataset.
 
-### 2nd-Stage Fine-Tuning
+I utilised the AdamW optimiser and conducted hyperparameter tuning on the learning rate.
 
-(TODO) Add more details
+I fine-tuned for at most 10 epochs and utilise an early stopping strategy as follows:
 
-**Training details:** The whole model is fine-tuned. I utilise the AdamW optimiser with a learning rate of 1e-5. Batch size is 32 and trained for 8 epochs.
+Let $P_i$ be the model parameter after the $i$-th epoch of the fine-tuning ($i \in \left\{ 0, .., 9\right\}$), and $L_i$ the loss of the model on the evaluation dataset with parameter $P_i$. If there exists an $i$ that satisfies $L_i < L_{i+1} < L_{i+2}$, then the model parameter $P_i$ that satisfies this condition with the smallest $i$ is taken as the final result. Otherwise, the parameter of the last epoch is taken as the final result.
 
-## Source Code: Repositories
+### My Model
+
+#### Second-Stage Pre-Training
+
+Each sentence is padded or truncated to 64 tokens.
+
+The training utilises a matrix multiplication precision of BFloat16 By default, rather than Float32, although the tensors are always in Float32 format.
+
+For the pre-training objective, I follow the BART and utilise the text-infilling training objective and directly utilised the [Wakong](https://github.com/ayaka14732/wakong) library.
+
+The model is initialised from the Chinese (Mandarin) BART model, with the embedding layer modified as the description above. Extra tokens are randomly initialised. Weight tying is also used in this model.
+
+I utilise the SGD optimiser with a learning rate of 0.03 and adaptive gradient clipping 0.1. I also experimented with other optimisers such as Adam and AdamW, but they yield worse results. The batch size is 640. It is trained for 7 epochs and 61,440 steps. The training takes 44.0 hours on Google Cloud TPU v4-16.
+
+#### First-Stage Fine-Tuning
+
+Initialisation: In each linear layer, the weights are randomly initialised using Lecun normal initialiser, while the biases are set to zeros.
+
+Training details: Only train the two linear projection layers and fix the other parts.
+
+#### Second-Stage Fine-Tuning
+
+The model parameters are initialised from the previous checkpoint. The whole model is fine-tuned with the AdamW optimiser with a universal learning rate of 1e-5. The batch size for the training is 32. The model is trained for at most 10 epochs, and the same early stopping strategy in fine-tuning the baseline model is employed.
+
+## Repositories
 
 TransCan consists of multiple repositories:
 
 - [ayaka14732/bart-base-jax](https://github.com/ayaka14732/bart-base-jax): Base model architecture
-- [ayaka14732/bert-tokenizer-cantonese](https://github.com/ayaka14732/bert-tokenizer-cantonese): Conversion of the embedding
-- [ayaka14732/lihkg-scraper](https://github.com/ayaka14732/lihkg-scraper): Data preparation for the 2nd-stage pre-training
-- [ayaka14732/wakong](https://github.com/ayaka14732/wakong): Training objective for the 2nd-stage pre-training
 - [ayaka14732/bart-base-cantonese](https://github.com/ayaka14732/bart-base-cantonese): Scripts for the 2nd-stage pre-training
-- [CanCLID/abc-cantonese-parallel-corpus](https://github.com/CanCLID/abc-cantonese-parallel-corpus): Data for fine-tuning
-- [ayaka14732/wordshk-parallel-corpus](https://github.com/ayaka14732/wordshk-parallel-corpus): Data for fine-tuning and evaluation
 - [ayaka14732/TransCan](https://github.com/ayaka14732/TransCan): Scripts for fine-tuning and evaluation
 
 Model weights:
@@ -167,13 +177,7 @@ Model weights:
 - 1st-stage fine-tuning: [Google Drive](https://drive.google.com/file/d/1MX0LYW5jhB72g3F_WAKQm1nZVQyuD_nl/view)
 - 2nd-stage fine-tuning: [Google Drive](https://drive.google.com/file/d/1IfsLd_KDnYO7nUqN0JcHoy2oLif2u4V6/view)
 
-Training details on W&B:
-
-- 2nd-stage pre-training: [`1j7zs802`](https://wandb.ai/ayaka/bart-base-cantonese/runs/1j7zs802)
-- 1st-stage fine-tuning: [`3nqi5cpl`](https://wandb.ai/ayaka/en-kfw-nmt/runs/3nqi5cpl)
-- 2nd-stage fine-tuning: [`2ix84gyx`](https://wandb.ai/ayaka/en-kfw-nmt-2nd-stage'/runs/2ix84gyx)
-
-## Source Code: Steps to Reproduce
+## Steps to Reproduce
 
 The experiment is conducted on Google Cloud TPU v4-16, and the results can be reproduced with the same setup. Alternatively, the results can be reproduced on any setup with two hosts, each with four default devices (e.g. two hosts with 4 GPU devices on each host). These scripts can also be easily modified to run on other environment setups to produce similar results, but the results would not be exactly the same.
 
