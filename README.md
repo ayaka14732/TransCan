@@ -2,6 +2,60 @@
 
 The model architecture of this project is based on [ayaka14732/bart-base-jax](https://github.com/ayaka14732/bart-base-jax). This project is supported by Cloud TPUs from Google's [TPU Research Cloud](https://sites.research.google/trc/about/) (TRC).
 
+## Inference
+
+To use this model directly, follow the instructions below.
+
+1\. Install Python 3.11
+
+2\. Create a virtual environment (venv)
+
+For example, on Arch Linux, perform the following steps:
+
+```sh
+python -m venv venv
+. ./venv/bin/activate
+```
+
+3\. Update the virtual environment
+
+```sh
+pip install -U pip
+pip install -U wheel
+```
+
+4\. Install JAX and PyTorch
+
+Please refer to the official JAX and PyTorch documentation for installation methods.
+
+- [JAX official installation method](https://github.com/google/jax#installation)
+- [PyTorch official installation method](https://pytorch.org/get-started/locally/)
+
+For example, on Arch Linux (with CUDA version 12.1), the commands used for installation are as follows:
+
+```sh
+pip install -U "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu121
+```
+
+In fact, running this project does not require a CUDA environment. Therefore, you can simply install the CPU version. Additionally, the generation script defaults to using the CPU and does not utilise CUDA. You need to modify the script to use CUDA.
+
+5\. Install other dependencies
+
+```sh
+pip install -r requirements.txt
+```
+
+6\. Download the model weights
+
+Download `atomic-thunder-15-7.dat` from [Google Drive](https://drive.google.com/file/d/1IfsLd_KDnYO7nUqN0JcHoy2oLif2u4V6/view).
+
+7\. Run the generation script
+
+```sh
+python generate.py atomic-thunder-15-7.dat
+```
+
 ## Results
 
 | Model | BLEU | File |
