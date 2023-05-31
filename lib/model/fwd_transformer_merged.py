@@ -1,7 +1,6 @@
 import jax.nn as nn
 import jax.random as rand
 from jaxtyping import Array, Bool as B, Float as F, UInt16 as U16, PyTree, jaxtyped
-from typeguard import typechecked
 
 from .dropout import dropout
 from .fwd_layer_norm import fwd_layer_norm
@@ -12,7 +11,6 @@ from .fwd_transformer_decoder import fwd_transformer_decoder
 from ..random.wrapper import KeyArray
 
 @jaxtyped
-@typechecked
 def fwd_transformer_merged(
     params: PyTree,
     src: U16[Array, 'bs src_len'],

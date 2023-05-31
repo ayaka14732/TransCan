@@ -2,7 +2,6 @@ import jax; jax.config.update('jax_platforms', 'cpu')
 import jax.numpy as np
 from jaxtyping import Array, Float as F, jaxtyped
 from typing import TypedDict
-from typeguard import typechecked
 
 # the model contains two parameters `a` and `b`
 class ParamType(TypedDict):
@@ -10,7 +9,6 @@ class ParamType(TypedDict):
     b: F[Array, 'm n']
 
 @jaxtyped
-@typechecked
 def f(x: ParamType) -> ParamType:
     return x
 

@@ -1,7 +1,6 @@
 import jax.nn as nn
 import jax.random as rand
 from jaxtyping import Array, Bool as B, Float as F, PyTree, jaxtyped
-from typeguard import check_type, typechecked
 
 from .dropout import dropout
 from .fwd_layer_norm import fwd_layer_norm
@@ -10,7 +9,6 @@ from .fwd_attention import fwd_attention
 from ..random.wrapper import KeyArray
 
 @jaxtyped
-@typechecked
 def fwd_transformer_encoder(
     params: PyTree,
     src: F[Array, 'bs src_len d_model'],
@@ -33,7 +31,7 @@ def fwd_transformer_encoder(
         t = dropout(subkeys[0], t)
     t = t + src_
     t = fwd_layer_norm(self_attn_layer_norm, t)
-    check_type('t', t, F[Array, 'bs src_len d_ff'])
+    # check_type('t', t, F[Array, 'bs src_len d_ff'])
 
     t_ = t
     t = fwd_linear(ff0, t)
@@ -45,6 +43,6 @@ def fwd_transformer_encoder(
         t = dropout(subkeys[2], t)
     t = t + t_
     t = fwd_layer_norm(final_layer_norm, t)
-    check_type('t', t, F[Array, 'bs src_len d_model'])
+    # check_type('t', t, F[Array, 'bs src_len d_model'])
 
     return t

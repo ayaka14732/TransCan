@@ -37,7 +37,7 @@ def remove_tokenisation_space(s: str) -> str:
 sentences = load_cantonese(split='test')
 sentences_en = [en for en, _ in sentences]
 
-param_file = sys.argv[1] if len(sys.argv) >= 2 else 'distinctive-gorge-3.dat'
+param_file = sys.argv[1] if len(sys.argv) >= 2 else 'atomic-thunder-15-7.dat'
 params = load_params(param_file)
 params = jax.tree_map(np.asarray, params)
 
