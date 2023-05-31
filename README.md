@@ -50,6 +50,10 @@ pip install -r requirements.txt
 
 Download `atomic-thunder-15-7.dat` from [Google Drive](https://drive.google.com/file/d/1IfsLd_KDnYO7nUqN0JcHoy2oLif2u4V6/view).
 
+```sh
+gdown 1IfsLd_KDnYO7nUqN0JcHoy2oLif2u4V6
+```
+
 7\. Run the generation script
 
 ```sh
@@ -121,7 +125,7 @@ The [LIHKG dataset](https://github.com/ayaka14732/lihkg-scraper) (denoted by **L
 
 ### ABC Cantonese Parallel Corpus
 
-The [ABC Cantonese Parallel Corpus](https://github.com/CanCLID/abc-cantonese-parallel-corpus) (denoted by **ABC**) is extracted from the [_ABC Cantonese-English Comprehensive Dictionary_](https://wenlin.co/wow/Project:Jyut). The corpus provides 14,474 high-quality Cantonese-English parallel sentences, which is valuable for developing Cantonese-English translation systems.
+The [ABC Cantonese Parallel Corpus](https://github.com/ayaka14732/abc-cantonese-parallel-corpus) (denoted by **ABC**) is extracted from the [_ABC Cantonese-English Comprehensive Dictionary_](https://wenlin.co/wow/Project:Jyut). The corpus provides 14,474 high-quality Cantonese-English parallel sentences, which is valuable for developing Cantonese-English translation systems.
 
 ### Words.hk Cantonese-English Parallel Corpus
 
@@ -214,8 +218,14 @@ The experiment is conducted on Google Cloud TPU v4-16, and the results can be re
 ```sh
 # Clone source code and datasets
 git clone https://github.com/ayaka14732/TransCan.git
-git clone https://github.com/CanCLID/abc-cantonese-parallel-corpus.git
 git clone https://github.com/ayaka14732/wordshk-parallel-corpus.git
+
+# Download ABC Cantonese Parallel Corpus
+mkdir abc-cantonese-parallel-corpus
+cd abc-cantonese-parallel-corpus
+gdown 1WJ7bWgIhus-geMqwWoyt_POalgrJxuwj  # yue.txt
+gdown 1XbO6POEbjeiYuIZe_SN9ECv571IRyz2T  # en.txt
+cd ..
 
 # set environment variables
 cd TransCan
