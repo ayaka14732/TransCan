@@ -125,7 +125,7 @@ The [ABC Cantonese Parallel Corpus](https://github.com/CanCLID/abc-cantonese-par
 
 ### Words.hk Cantonese-English Parallel Corpus
 
-The [Words.hk Cantonese-English Parallel Corpus](https://github.com/CanCLID/wordshk-parallel-corpus.git) is extracted from [Words.hk](https://words.hk/), a crowdsourced, sustainably developed, web-based Cantonese dictionary for native speakers and beginners of Cantonese. The dictionary is dedicated to providing complete Cantonese-English bilingual explanations and illustrative examples.
+The [Words.hk Cantonese-English Parallel Corpus](https://github.com/ayaka14732/wordshk-parallel-corpus.git) is extracted from [Words.hk](https://words.hk/), a crowdsourced, sustainably developed, web-based Cantonese dictionary for native speakers and beginners of Cantonese. The dictionary is dedicated to providing complete Cantonese-English bilingual explanations and illustrative examples.
 
 After extracting the parallel data, I split the data into two datasets, according to whether the Cantonese sentences in the Cantonese-English sentence pairs were greater than or equal to 15 characters. The dataset with lengths less than 15 characters are denoted by **Minus15** (29487 pairs of sentences), while the dataset with lengths greater than 15 is denoted by **Plus15** (12372 pairs of sentences).
 
@@ -215,7 +215,7 @@ The experiment is conducted on Google Cloud TPU v4-16, and the results can be re
 # Clone source code and datasets
 git clone https://github.com/ayaka14732/TransCan.git
 git clone https://github.com/CanCLID/abc-cantonese-parallel-corpus.git
-git clone https://github.com/CanCLID/wordshk-parallel-corpus.git
+git clone https://github.com/ayaka14732/wordshk-parallel-corpus.git
 
 # set environment variables
 cd TransCan
