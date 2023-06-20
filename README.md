@@ -2,6 +2,8 @@
 
 The model architecture of this project is based on [ayaka14732/bart-base-jax](https://github.com/ayaka14732/bart-base-jax). This project is supported by Cloud TPUs from Google's [TPU Research Cloud](https://sites.research.google/trc/about/) (TRC).
 
+A technical report (early draft) is published on [Overleaf](https://www.overleaf.com/read/yfkhmjvycjdx).
+
 ## Inference
 
 To use this model directly, follow the instructions below.
