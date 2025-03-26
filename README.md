@@ -50,10 +50,10 @@ pip install -r requirements.txt
 
 6\. Download the model weights
 
-Download `atomic-thunder-15-7.dat` from [Google Drive](https://drive.google.com/file/d/1IfsLd_KDnYO7nUqN0JcHoy2oLif2u4V6/view).
+Download `atomic-thunder-15-7.dat` from [Google Drive](https://drive.google.com/file/d/1S1WfuU73aGxxxU1qKXri6sTbIMi50RJ9/view).
 
 ```sh
-gdown 1IfsLd_KDnYO7nUqN0JcHoy2oLif2u4V6
+gdown 1S1WfuU73aGxxxU1qKXri6sTbIMi50RJ9
 ```
 
 7\. Run the generation script
@@ -211,7 +211,7 @@ The model parameters are initialised from the previous checkpoint. The whole mod
 
 - 2nd-stage pre-training: [Hugging Face Hub](https://huggingface.co/Ayaka/bart-base-cantonese)
 - 1st-stage fine-tuning: [Google Drive](https://drive.google.com/file/d/1MX0LYW5jhB72g3F_WAKQm1nZVQyuD_nl/view)
-- 2nd-stage fine-tuning: [Google Drive](https://drive.google.com/file/d/1IfsLd_KDnYO7nUqN0JcHoy2oLif2u4V6/view)
+- 2nd-stage fine-tuning: [Google Drive](https://drive.google.com/file/d/1S1WfuU73aGxxxU1qKXri6sTbIMi50RJ9/view)
 
 ## Steps to Reproduce
 
