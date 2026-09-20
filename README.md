@@ -87,7 +87,7 @@ Cantonese is a language spoken by 85.6 million people worldwide. Both [Baidu Tra
 - Bing Translate (Mandarin): 電機的活塞損壞。讓我們找一個修理工來修理它。
 - Bing Translate (Cantonese): 電機嘅活塞損壞。讓我們找一個修理工來修理它。
 
-In the above example, Bing Translate correctly translated the Mandarin word 的 (*de*, possessive marker) to the Cantonese word 嘅 (*ge3*), but failed to translate the Mandarin word 找 (*zhǎo*, 'find') to Cantonese 揾 (*wan3*) and Mandarin 它 (*tā*, 'it') to Cantonese 佢 (*keoi5*).
+In the above example, Bing Translate correctly translated the Mandarin word 的 (*de*, possessive marker) to the Cantonese word 嘅 (*ge3*), but failed to translate the Mandarin word 找 (*zhǎo*, 'find') to Cantonese 揾 (*wan2*) and Mandarin 它 (*tā*, 'it') to Cantonese 佢 (*keoi5*).
 
 **Example 2**
 
