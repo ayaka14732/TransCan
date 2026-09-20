@@ -183,7 +183,7 @@ I utilised the AdamW optimiser and conducted hyperparameter tuning on the learn
 
 I fine-tuned for at most 10 epochs and utilise an early stopping strategy as follows:
 
-Let $P_i$ be the model parameter after the $i$-th epoch of the fine-tuning ($i \in \left\{ 0, .., 9\right\}$), and $L_i$ the loss of the model on the evaluation dataset with parameter $P_i$. If there exists an $i$ that satisfies $L_i < L_{i+1} < L_{i+2}$, then the model parameter $P_i$ that satisfies this condition with the smallest $i$ is taken as the final result. Otherwise, the parameter of the last epoch is taken as the final result.
+Let $P_i$ be the model parameter after the $i$-th epoch of the fine-tuning ($i \in \lbrace 0, ..., 9\rbrace$), and $L_i$ the loss of the model on the evaluation dataset with parameter $P_i$. If there exists an $i$ that satisfies $L_i < L_{i+1} < L_{i+2}$, then the model parameter $P_i$ that satisfies this condition with the smallest $i$ is taken as the final result. Otherwise, the parameter of the last epoch is taken as the final result.
 
 ### My Model
 
